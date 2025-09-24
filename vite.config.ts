@@ -6,8 +6,9 @@ import UnoCSS from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import VueMacros from 'unplugin-vue-macros/vite'
-import { VueRouterAutoImports } from 'unplugin-vue-router'
 import { defineConfig } from 'vite'
+// @ts-expect-error - no types
+import Peggy from 'vite-plugin-peggy-loader'
 
 export default defineConfig({
   resolve: {
@@ -34,11 +35,6 @@ export default defineConfig({
       imports: [
         'vue',
         '@vueuse/core',
-        VueRouterAutoImports,
-        {
-          // add any other imports you were relying on
-          'vue-router/auto': ['useLink'],
-        },
       ],
       dts: true,
       dirs: [
@@ -55,5 +51,7 @@ export default defineConfig({
     // https://github.com/antfu/unocss
     // see uno.config.ts for config
     UnoCSS(),
+
+    Peggy(),
   ],
 })

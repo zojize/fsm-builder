@@ -13,18 +13,23 @@
   },
   "dependencies": {
     "@vueuse/core": "catalog:frontend",
+    "lz-string": "catalog:frontend",
+    "toastify-js": "catalog:frontend",
     "vue": "catalog:frontend"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:dev",
     "@iconify-json/carbon": "catalog:build",
+    "@iconify-json/mdi": "catalog:build",
     "@types/node": "catalog:dev",
+    "@types/toastify-js": "catalog:dev",
     "@unocss/eslint-plugin": "catalog:dev",
     "@vitejs/plugin-vue": "catalog:build",
     "@vue-macros/volar": "catalog:dev",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
     "lint-staged": "catalog:dev",
+    "peggy": "catalog:build",
     "simple-git-hooks": "catalog:dev",
     "taze": "catalog:dev",
     "typescript": "catalog:dev",
@@ -32,8 +37,8 @@
     "unplugin-auto-import": "catalog:build",
     "unplugin-vue-components": "catalog:build",
     "unplugin-vue-macros": "catalog:build",
-    "unplugin-vue-router": "catalog:build",
     "vite": "catalog:build",
+    "vite-plugin-peggy-loader": "catalog:build",
     "vue-tsc": "catalog:dev"
   },
   "resolutions": {

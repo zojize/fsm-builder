@@ -857,6 +857,7 @@ export function createFSMBuilder({
       initializeNodeInteraction(el, svg, id, node)
     }
     nodesGroup.appendChild(el)
+    runValidation()
     return el
 
     function createNodeEl(svg: SVGSVGElement, id: NodeId, node: FSMNode) {
@@ -1271,7 +1272,6 @@ export function createFSMBuilder({
   }
 
   function removeNode(id: NodeId) {
-    // TODO
     svg.dispatchEvent(new CustomEvent(`fsm:${id}-remove`))
     svg.dispatchEvent(new CustomEvent('fsm:update', { detail: { type: 'remove-node', id } }))
 
@@ -1333,6 +1333,10 @@ export function createFSMBuilder({
         arrow.setAttribute('visibility', 'hidden')
       }
     })
+
+    if (startId && getNode(startId)) {
+      svg.dispatchEvent(new CustomEvent('fsm:set-start', { detail: startId }))
+    }
 
     function updateStartMarker(node: FSMNode) {
       const s = { x: node.x - node.radius - 6, y: node.y }
@@ -1400,7 +1404,7 @@ export function createFSMBuilder({
         svg.setAttribute('viewBox', `0 0 ${100 * newAspectRatio} 100`)
       }
     })
-    resizeObserver.observe(container, { box: 'border-box' })
+    resizeObserver.observe(container)
 
     svg.addEventListener('fsm:update', (e) => {
       const { type, id } = (e as CustomEvent<FSMUpdateEvent>).detail
@@ -1587,7 +1591,6 @@ export function createFSMBuilder({
     return { pt, textAnchor }
   }
 }
-
 
 // #region Element helpers
 
