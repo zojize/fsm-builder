@@ -13,6 +13,11 @@ variables.value = searchParams.get('vars') ?? variables.value
 const searchInputs = searchParams.get('inputs')
 inputs.value = searchInputs ? JSON.parse(decode(searchInputs)) : {}
 
+const isSafari = computed(() => {
+  const ua = navigator.userAgent
+  return ua.includes('Safari') && !ua.includes('Chrome')
+})
+
 const { copy } = useClipboard()
 async function share() {
   const params = new URLSearchParams()
@@ -84,6 +89,13 @@ function textareaOnInput(event: Event) {
 </script>
 
 <template>
+  <!-- TODO: fix compatibility -->
+  <div v-if="isSafari" class="text-yellow-700 mb-4 p-4 border-l-4 border-yellow-500 bg-yellow-100" role="alert">
+    <p class="font-bold">
+      Safari Compatibility Notice
+    </p>
+    <p>You may not have the full experience on Safari. Please switch to Chrome for the best experience.</p>
+  </div>
   <TheHeader @share="share" />
   <main class="flex flex-1 flex-row gap-2 max-h-[calc(100vh-4rem)]">
     <FsmBuilder :key="`${validationContainer}${updateKey}`" v-model="fsmState" v-model:inputs="inputs" :validation-container :variables />
