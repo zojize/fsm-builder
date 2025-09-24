@@ -8,10 +8,10 @@ const inputs = useLocalStorage('inputs', {} as Record<string, string>)
 const searchParams = new URLSearchParams(window.location.search)
 
 const searchState = searchParams.get('state')
-fsmState.value = searchState ? JSON.parse(decode(searchState)) : undefined
+fsmState.value = searchState ? JSON.parse(decode(searchState)) : fsmState.value
 variables.value = searchParams.get('vars') ?? variables.value
 const searchInputs = searchParams.get('inputs')
-inputs.value = searchInputs ? JSON.parse(decode(searchInputs)) : {}
+inputs.value = searchInputs ? JSON.parse(decode(searchInputs)) : inputs.value
 
 const isSafari = computed(() => {
   const ua = navigator.userAgent

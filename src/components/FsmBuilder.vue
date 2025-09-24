@@ -41,7 +41,7 @@ onMounted(() => {
       container: validationContainer,
       edge: {
         inputAttributes: {
-          pattern: `[${variables}01\\(\\)'+]+`,
+          pattern: `^[${variables}01\\(\\)'+]+$`,
         },
         validate(input) {
           return validateBooleanExpression(input)
