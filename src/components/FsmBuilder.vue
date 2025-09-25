@@ -70,7 +70,7 @@ function evaluateBooleanExpression(
     case 'mul':
       return evaluateBooleanExpression(expr.left, context) && evaluateBooleanExpression(expr.right, context)
     case 'not':
-      return !evaluateBooleanExpression(expr.expr, context)
+      return !evaluateBooleanExpression(expr.operand, context)
     case 'var':
       return !!context[expr.symbol]
     case 'true':
@@ -101,7 +101,6 @@ function step() {
         }
         context[v] = input === '1'
       }
-      // console.log(context, expr, evaluateBooleanExpression(expr, context))
       if (evaluateBooleanExpression(expr, context)) {
         targets.push(transition.to)
       }

@@ -209,7 +209,7 @@ interface Mul {
 
 interface Not {
   type: 'not'
-  expr: Expression
+  operand: Expression
 }
 
 interface Var {
