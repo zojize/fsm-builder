@@ -95,7 +95,6 @@ export function createFSMBuilder({
   if (!fsmContainer) {
     throw new Error(`FSM: Element with selector ${container} not found`)
   }
-  const getContainerRect = () => fsmContainer.getBoundingClientRect()
 
   const fsmState: FSMState = initialState
   const isReadonly = Boolean(readonly)
@@ -145,13 +144,12 @@ export function createFSMBuilder({
   ;(fsmContainer as HTMLElement).dataset.editMode = 'default'
 
   if (!isReadonly) {
-    registerGlobalEvents(fsmContainer)
+    registerGlobalEvents()
   }
 
   const validationContainer = (validationEnabled && validateConfig && validateConfig.container) || container
   fsmContainer.appendChild(getStyle(container, fontFamily, validationContainer))
-
-  ;(fsmContainer as HTMLElement).style.position = (fsmContainer as HTMLElement).style.position || 'relative'
+  fsmContainer.style.position ??= 'relative'
 
   // Sidebar is always rendered in debug mode; otherwise follow the 'sidebar' option
   if (!isReadonly && (debug || sidebar)) {
@@ -226,12 +224,17 @@ export function createFSMBuilder({
       return
     }
     const errors: string[] = []
-    const inputs = fsmContainer.querySelectorAll<HTMLInputElement>('input.fsm-input')
-    inputs.forEach((input) => {
+    const fos = overlay.querySelectorAll<SVGForeignObjectElement>('.fsm-node-label-editor, .fsm-edge-label-editor, .fsm-node-inner-editor')
+    fos.forEach((fo) => {
+      const input = fo.querySelector<HTMLInputElement>('input.fsm-input')
+      if (!input) {
+        return
+      }
       const kind = input.dataset.validateType as ValidateKind | undefined
       const opts = kind ? validateConfig?.[kind] as ValidateOptions | undefined : undefined
       const validator = opts?.validate
       if (!validator) {
+        fo.classList.remove('invalid')
         input.classList.remove('invalid')
         return
       }
@@ -244,14 +247,17 @@ export function createFSMBuilder({
         res = false
       }
       if (typeof res === 'string') {
+        fo.classList.add('invalid')
         input.classList.add('invalid')
         errors.push(res)
       }
       else if (res === false) {
+        fo.classList.add('invalid')
         input.classList.add('invalid')
         errors.push(`${input.value} is invalid`)
       }
       else {
+        fo.classList.remove('invalid')
         input.classList.remove('invalid')
       }
     })
@@ -335,6 +341,7 @@ export function createFSMBuilder({
       btn.setAttribute('data-mode', mode)
       const img = document.createElement('img')
       img.alt = title
+      img.draggable = false
       img.src = iconUrl
       btn.appendChild(img)
       btn.addEventListener('click', () => {
@@ -560,7 +567,7 @@ export function createFSMBuilder({
       const pos0 = edgeLabelFOPosition(layout, ew, eh)
       setFOBounds(edgeFO, pos0.x, pos0.y, ew, eh)
       // Clip the editor under nodes the same way edges are clipped
-      edgeFO.setAttribute('mask', 'url(#edge-mask)')
+      // edgeFO.setAttribute('mask', 'url(#edge-mask)')
       if (isReadonly) {
         const textEl = createFOText(transition.label || '', '2.8px', layout.textAnchor === 'middle' ? 'center' : layout.textAnchor === 'start' ? 'left' : 'right')
         edgeFO.appendChild(textEl)
@@ -588,11 +595,6 @@ export function createFSMBuilder({
             ev.preventDefault()
             ev.stopPropagation()
             edgeInput.blur()
-          }
-          else if ((ev.key === 'Delete' || ev.key === 'Backspace') && edgeInput.value === '') {
-            ev.preventDefault()
-            ev.stopPropagation()
-            removeEdge(id)
           }
           if (
             edgeInput.pattern !== ''
@@ -915,11 +917,6 @@ export function createFSMBuilder({
               ev.preventDefault()
               ev.stopPropagation()
               input.blur()
-            }
-            else if ((ev.key === 'Delete' || ev.key === 'Backspace') && input.value === '') {
-              ev.preventDefault()
-              ev.stopPropagation()
-              removeNode(id)
             }
             if (
               input.pattern !== ''
@@ -1353,7 +1350,7 @@ export function createFSMBuilder({
     const svg = createSvgEl('svg')
     svg.setAttribute('width', '100%')
     svg.setAttribute('height', '100%')
-    const rect = getContainerRect()
+    const rect = (() => fsmContainer.getBoundingClientRect())()
     const aspectRatio = rect.width / rect.height
     svg.setAttribute('viewBox', `0 0 ${100 * aspectRatio} 100`)
     for (const [key, value] of Object.entries(svgAttributes)) {
@@ -1391,20 +1388,14 @@ export function createFSMBuilder({
     return { svg, defs, edgesGroup, nodesGroup, overlay }
   }
 
-  function registerGlobalEvents(container: HTMLElement) {
+  function registerGlobalEvents() {
     // Observe container resize
     const resizeObserver = new ResizeObserver(() => {
-      const rect = getContainerRect()
-      const currentViewBox = svg.viewBox.baseVal
-      const currentAspectRatio = currentViewBox.width / currentViewBox.height
+      const rect = fsmContainer.getBoundingClientRect()
       const newAspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
-
-      // Only update if aspect ratio changed (ignore height-only changes)
-      if (Math.abs(currentAspectRatio - newAspectRatio) > 0.001) {
-        svg.setAttribute('viewBox', `0 0 ${100 * newAspectRatio} 100`)
-      }
+      svg.setAttribute('viewBox', `0 0 ${100 * newAspectRatio} 100`)
     })
-    resizeObserver.observe(container)
+    resizeObserver.observe(document.body)
 
     svg.addEventListener('fsm:update', (e) => {
       const { type, id } = (e as CustomEvent<FSMUpdateEvent>).detail
@@ -1764,15 +1755,10 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
         font-family: ${fontFamily};
       }
 
-      ${container} .fsm-input::selection {
-        background-color: transparent;
-      }
-      ${container} .fsm-input:focus::selection {
-        background-color: revert;
-      }
-
-      ${container} foreignObject:has(.fsm-input.invalid) {
-        outline: 0.1px dashed #dc2626dd;
+      ${container} .fsm-edge-label-editor.invalid,
+      ${container} .fsm-node-label-editor.invalid,
+      ${container} .fsm-node-inner-editor.invalid {
+        border: 0.05px dashed #dc2626dd;
         border-radius: 1px;
       }
 

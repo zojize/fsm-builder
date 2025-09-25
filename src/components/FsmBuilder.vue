@@ -150,6 +150,3 @@ watch(currentNodeCircle, (newCircle, oldCircle) => {
     </div>
   </div>
 </template>
-
-<style scoped>
-</style>
