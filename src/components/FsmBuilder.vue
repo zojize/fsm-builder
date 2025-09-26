@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FSMState } from '~/utils/fsm'
+import Toastify from 'toastify-js'
 import * as booleanParser from '~/utils/booleanParser.pegjs'
 import { createFSMBuilder } from '~/utils/fsm'
 
@@ -95,8 +96,10 @@ function step() {
       for (const v of variables) {
         const input = inputs.value[v][0]
         if (!input) {
-          // eslint-disable-next-line no-alert
-          alert(`No more input for variable ${v}`)
+          Toastify({
+            text: `No more input for variable ${v}`,
+            backgroundColor: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+          }).showToast()
           return
         }
         context[v] = input === '1'
@@ -112,23 +115,27 @@ function step() {
       }
     }
     else if (targets.length > 1) {
-      // eslint-disable-next-line no-alert
-      alert('Nondeterministic transition, multiple targets match condition')
+      Toastify({
+        text: 'Nondeterministic transition, multiple targets match condition',
+        backgroundColor: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+      }).showToast()
     }
     else {
-      // eslint-disable-next-line no-alert
-      alert('No valid transition found')
+      Toastify({
+        text: 'No valid transition found',
+        backgroundColor: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+      }).showToast()
     }
   }
 }
 
 const containerEl = useTemplateRef('containerEl')
-function styleCurrentNode(circle: SVGCircleElement | null) {
+function styleNode(circle: SVGCircleElement | null) {
   if (circle) {
     circle.classList.add('!stroke-blue-800', '!fill-blue-500/50')
   }
 }
-function unstyleCurrentNode(circle: SVGCircleElement | null) {
+function unstyleNode(circle: SVGCircleElement | null) {
   if (circle) {
     circle.classList.remove('!stroke-blue-800', '!fill-blue-500/50')
   }
@@ -137,8 +144,8 @@ const currentNodeCircle = computed(() => {
   return containerEl.value?.querySelector<SVGCircleElement>(`.fsm-nodes g.fsm-node[data-node-id="${currentNode.value}"] circle`) ?? null
 })
 watch(currentNodeCircle, (newCircle, oldCircle) => {
-  unstyleCurrentNode(oldCircle)
-  styleCurrentNode(newCircle)
+  unstyleNode(oldCircle)
+  styleNode(newCircle)
 })
 </script>
 
