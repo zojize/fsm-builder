@@ -132,12 +132,12 @@ function step() {
 const containerEl = useTemplateRef('containerEl')
 function styleNode(circle: SVGCircleElement | null) {
   if (circle) {
-    circle.classList.add('!stroke-blue-800', '!fill-blue-500/50')
+    circle.classList.add('!stroke-teal-800', '!fill-teal-500/50')
   }
 }
 function unstyleNode(circle: SVGCircleElement | null) {
   if (circle) {
-    circle.classList.remove('!stroke-blue-800', '!fill-blue-500/50')
+    circle.classList.remove('!stroke-teal-800', '!fill-teal-500/50')
   }
 }
 const currentNodeCircle = computed(() => {

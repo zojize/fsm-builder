@@ -139,14 +139,14 @@ function textareaOnInput(event: Event) {
         <input
           v-model="variables"
           placeholder="Variables (e.g. abcd)"
-          class="text-sm px-3 py-2 border border-gray-300 rounded-md w-full shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+          class="text-sm px-3 py-2 border border-gray-300 rounded-md w-full shadow-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
         >
       </label>
       <!-- why does v-model not work here -->
       <input
         v-for="variable in Array.from(variables)"
         :key="variable" type="text"
-        class="text-sm px-3 py-2 border border-gray-300 rounded-md w-full shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+        class="text-sm px-3 py-2 border border-gray-300 rounded-md w-full shadow-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
         :placeholder="`input sequence for ${variable}`"
         :value="inputs[variable]"
         @keydown="onKeydown"
@@ -155,11 +155,11 @@ function textareaOnInput(event: Event) {
       <div class="flex-1 h-full w-full relative">
         <div class="p-3 border border-gray-200 rounded-lg bg-white/90 flex flex-col gap-2 shadow-sm right-2 top-2 absolute backdrop-blur-sm">
           <label class="text-sm text-gray-700 flex gap-2 cursor-pointer transition-colors items-center hover:text-gray-900">
-            <input v-model="legacy" type="checkbox" class="text-blue-600 border-gray-300 rounded">
+            <input v-model="legacy" type="checkbox" class="text-teal-600 border-gray-300 rounded">
             <span>Legacy</span>
           </label>
           <label class="text-sm text-gray-700 flex gap-2 cursor-pointer transition-colors items-center hover:text-gray-900">
-            <input v-model="logicOnly" type="checkbox" class="text-blue-600 border-gray-300 rounded">
+            <input v-model="logicOnly" type="checkbox" class="text-teal-600 border-gray-300 rounded">
             <span>Logic Only</span>
           </label>
         </div>

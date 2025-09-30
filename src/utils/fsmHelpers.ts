@@ -154,7 +154,8 @@ export function logicOnlyFsm(state: FSMState) {
             transitions: node.transitions.map(({ offset, ...t }) => t),
           },
         ]
-      ))),
+      )),
+    ),
   }
 }
 
