@@ -6,7 +6,9 @@ const emit = defineEmits<{
 
 <template>
   <nav class="text-xl flex gap-2 w-full items-center">
-    <h1> FSM Builder </h1>
+    <h1 class="font-bold font-mono">
+      FSM Builder
+    </h1>
     <div class="flex-1" />
     <button class="i-mdi-share icon-btn" title="Share" @click="emit('share')" />
     <a

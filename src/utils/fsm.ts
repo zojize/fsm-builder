@@ -69,12 +69,12 @@ const defaultFSMOptions = {
   container: undefined!,
   svgAttributes: {},
   initialState: { nodes: {} },
-  defaultRadius: 5,
+  defaultRadius: 30,
   fontFamily: ' ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "DejaVu Sans Mono", "Roboto Mono", "Noto Sans Mono", monospace',
   fontSizeBreakpoints: {
-    edge: { 5: '2.3px', 8: '2.0px' }, // Scale edge labels
-    innerNode: { 5: '3.0px', 10: '2.5px' }, // Scale inner node labels
-    outerNode: { 15: '3.0px', 25: '2.5px' }, // Scale outer node labels
+    edge: { 5: '13.8px', 8: '12.0px' }, // Scale edge labels
+    innerNode: { 5: '18.0px', 10: '15.0px' }, // Scale inner node labels
+    outerNode: { 15: '18.0px', 25: '15.0px' }, // Scale outer node labels
   },
   validate: false,
   sidebar: true,
@@ -126,9 +126,9 @@ export function createFSMBuilder({
   let validationEl: HTMLDivElement | null = null
 
   // Default font sizes
-  const defaultEdgeFontSize = '2.8px'
-  const defaultInnerNodeFontSize = '3.2px'
-  const defaultOuterNodeFontSize = '3.5px'
+  const defaultEdgeFontSize = '16.8px'
+  const defaultInnerNodeFontSize = '19.2px'
+  const defaultOuterNodeFontSize = '21px'
 
   const nodeAbortControllers: Record<NodeId, AbortController> = {}
   for (const id of Object.keys(fsmState.nodes)) {
@@ -497,7 +497,7 @@ export function createFSMBuilder({
     function updateNodeMaskShape(node: FSMNode, circle: SVGCircleElement) {
       circle.setAttribute('cx', `${node.x}`)
       circle.setAttribute('cy', `${node.y}`)
-      circle.setAttribute('r', `${node.radius + 0.1}`)
+      circle.setAttribute('r', `${node.radius + 0.6}`)
       circle.setAttribute('fill', 'black')
     }
   }
@@ -506,7 +506,7 @@ export function createFSMBuilder({
 
   function createNewEdge(source: NodeId, transition: FSMTransition) {
     // Offset distance for edge labels in left/right modes so labels don't touch the edge
-    const LABEL_NORMAL_OFFSET = 1.8
+    const LABEL_NORMAL_OFFSET = 10.8
 
     const id = createEdgeId()
     if (id in edgeIdToTransition && debug) {
@@ -590,7 +590,7 @@ export function createFSMBuilder({
       edgeFO.dataset.edgeId = id
       const fontSize = getFontSize((transition.label || '').length, fontSizeBreakpoints?.edge || {}, defaultEdgeFontSize)
       const ew = getTextWidth(transition.label || 'M', `${fontSize} normal ${fontFamily}`)
-      const eh = 6
+      const eh = 36
       const pos0 = edgeLabelFOPosition(layout, ew, eh)
       setFOBounds(edgeFO, pos0.x, pos0.y, ew, eh)
       // Clip the editor under nodes the same way edges are clipped
@@ -682,7 +682,7 @@ export function createFSMBuilder({
         if (!moved) {
           const dx = e.clientX - downX
           const dy = e.clientY - downY
-          if (dx * dx + dy * dy > 4) {
+          if (dx * dx + dy * dy > 144) {
             moved = true
           }
         }
@@ -880,7 +880,7 @@ export function createFSMBuilder({
 
   function createNewNode(id: NodeId, node: FSMNode) {
     // Extra vertical gap between node circle and the outer label editor
-    const OUTER_LABEL_GAP = 0.8
+    const OUTER_LABEL_GAP = 4.8
 
     const el = createNodeEl(svg, id, node)
     initializeNodeLabelEditors(svg, id, node)
@@ -916,7 +916,7 @@ export function createFSMBuilder({
       // Inner editor (centered)
       let innerFO = svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-inner-editor[data-node-id="${id}"]`)
       const ewInner = node.radius * 2
-      const ehInner = 6
+      const ehInner = 36
       const ix = node.x - ewInner / 2
       const iy = node.y - ehInner / 2
       if (!innerFO) {
@@ -984,8 +984,8 @@ export function createFSMBuilder({
       let outerFO = svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-label-editor[data-node-id="${id}"]`)
       const fontSize = getFontSize((node.label || '').length, fontSizeBreakpoints?.outerNode || {}, defaultOuterNodeFontSize)
       const ewOuter = getTextWidth(node.label || 'M', `${fontSize} normal ${fontFamily}`)
-      const ehOuter = 6
-      const oyAnchor = node.y + node.radius + 2 + OUTER_LABEL_GAP
+      const ehOuter = 36
+      const oyAnchor = node.y + node.radius + 12 + OUTER_LABEL_GAP
       const ox = node.x - ewOuter / 2
       const oy = oyAnchor - ehOuter / 2
       if (!outerFO) {
@@ -1184,7 +1184,7 @@ export function createFSMBuilder({
         if (!moved) {
           const dx = nx - dragStartX
           const dy = ny - dragStartY
-          if (Math.hypot(dx, dy) > 0.3) {
+          if (Math.hypot(dx, dy) > 1.8) {
             moved = true
           }
         }
@@ -1200,7 +1200,7 @@ export function createFSMBuilder({
         const innerFO = svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-inner-editor[data-node-id="${id}"]`)
         if (innerFO) {
           const ewInner = node.radius * 2
-          const ehInner = 6
+          const ehInner = 36
           innerFO.setAttribute('x', `${nx - ewInner / 2}`)
           innerFO.setAttribute('y', `${ny - ehInner / 2}`)
           innerFO.setAttribute('width', `${ewInner}`)
@@ -1209,8 +1209,8 @@ export function createFSMBuilder({
         const outerFO = svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-label-editor[data-node-id="${id}"]`)
         if (outerFO) {
           const ewOuter = outerFO.width.baseVal.value
-          const ehOuter = 6
-          const oyAnchor = ny + node.radius + 2 + OUTER_LABEL_GAP
+          const ehOuter = 36
+          const oyAnchor = ny + node.radius + 12 + OUTER_LABEL_GAP
           outerFO.setAttribute('x', `${nx - ewOuter / 2}`)
           outerFO.setAttribute('y', `${oyAnchor - ehOuter / 2}`)
           outerFO.setAttribute('width', `${ewOuter}`)
@@ -1372,13 +1372,13 @@ export function createFSMBuilder({
     }
 
     function updateStartMarker(node: FSMNode) {
-      const s = { x: node.x - node.radius - 6, y: node.y }
+      const s = { x: node.x - node.radius - 36, y: node.y }
       const tip = { x: node.x - node.radius, y: node.y }
       const dir = unitVec(tip.x - s.x, tip.y - s.y)
       line.setAttribute('d', `M ${s.x} ${s.y} L ${tip.x} ${tip.y}`)
       line.classList.add('fsm-start-line')
       arrow.classList.add('fsm-start-arrow')
-      arrow.setAttribute('points', arrowHeadPoints(tip, dir, 2, 2))
+      arrow.setAttribute('points', arrowHeadPoints(tip, dir, 12, 12))
     }
   }
 
@@ -1388,7 +1388,7 @@ export function createFSMBuilder({
     svg.setAttribute('height', '100%')
     const rect = (() => fsmContainer.getBoundingClientRect())()
     const aspectRatio = rect.width / rect.height
-    svg.setAttribute('viewBox', `0 0 ${100 * aspectRatio} 100`)
+    svg.setAttribute('viewBox', `0 0 ${600 * aspectRatio} 600`)
     for (const [key, value] of Object.entries(svgAttributes)) {
       svg.setAttribute(key, value)
     }
@@ -1429,7 +1429,7 @@ export function createFSMBuilder({
     const resizeObserver = new ResizeObserver(() => {
       const rect = fsmContainer.getBoundingClientRect()
       const newAspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
-      svg.setAttribute('viewBox', `0 0 ${100 * newAspectRatio} 100`)
+      svg.setAttribute('viewBox', `0 0 ${600 * newAspectRatio} 600`)
     })
     resizeObserver.observe(document.body)
 
@@ -1568,7 +1568,7 @@ export function createFSMBuilder({
     const tipPt = { x: arcGeom.center.x + arc.radius * Math.cos(tipA), y: arcGeom.center.y + arc.radius * Math.sin(tipA) }
     const base = { x: -Math.sin(tipA), y: Math.cos(tipA) }
     // arbitrary -0.3 rad rotation to make self pointing arrows prettier
-    const tangUnit = rotate(unitVec(base.x, base.y), -0.3)
+    const tangUnit = rotate(unitVec(base.x, base.y), -0.32)
     const delta = normalizedAngleDelta(arcGeom.startAngle, arcGeom.endAngle, 1)
     const midA = arcGeom.startAngle + delta / 2
     const mid = { x: arcGeom.center.x + arc.radius * Math.cos(midA), y: arcGeom.center.y + arc.radius * Math.sin(midA) }
@@ -1581,7 +1581,7 @@ export function createFSMBuilder({
     const p3 = endCenter
     const [p1, p2] = controlFromOffsetCubic(p0, p3, offset)
     const d = `M ${p0.x} ${p0.y} C ${p1.x} ${p1.y} ${p2.x} ${p2.y} ${p3.x} ${p3.y}`
-    const tInt = findCubicCircleIntersectionT(p0, p1, p2, p3, endCenter, endRadius + 0.01)
+    const tInt = findCubicCircleIntersectionT(p0, p1, p2, p3, endCenter, endRadius + 0.06)
     const tipPt = cubicPoint(p0, p1, p2, p3, tInt)
     const tan = cubicTangent(p0, p1, p2, p3, tInt)
     const tangUnit = unitVec(tan.x, tan.y)
@@ -1694,15 +1694,15 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       ${container} .fsm-node-circle {
         fill: rgba(0, 0, 255, 0.08);
         stroke: black;
-        stroke-width: 0.2;
+        stroke-width: 1.2;
         transition: stroke 120ms ease, fill 120ms ease;
       }
 
 
       ${container} .fsm-node:hover .fsm-node-circle {
-        stroke: #2563eb; /* blue-600 */
+        stroke: #0d9488; /* teal-600 */
         cursor: grab;
-        fill: rgba(37, 99, 235, 0.15);
+        fill: rgba(13, 148, 136, 0.15);
       }
 
       /* SVG node label styles removed (replaced by FO editors) */
@@ -1710,7 +1710,7 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       ${container} .fsm-edge-path {
         fill: none;
         stroke: #888888;
-        stroke-width: 1;
+        stroke-width: 2;
         vector-effect: non-scaling-stroke;
         pointer-events: none;
         stroke-linecap: round;
@@ -1720,7 +1720,7 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       ${container} .fsm-edge-hit {
         fill: none;
         stroke: transparent;
-        stroke-width: 5;
+        stroke-width: 20;
         pointer-events: stroke;
         cursor: grab;
       }
@@ -1731,22 +1731,22 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       }
 
       ${container} .fsm-edge:hover .fsm-edge-path {
-        stroke: #2563eb;
-        stroke-width: 1.1;
+        stroke: #0d9488;
+        stroke-width: 2.4;
       }
       ${container} .fsm-edge:hover .fsm-edge-arrow {
-        fill: #2563eb;
+        fill: #0d9488;
       }
       ${container} .fsm-edge.dragging .fsm-edge-path {
-        stroke: #2563eb;
-        stroke-width: 1.1;
+        stroke: #0d9488;
+        stroke-width: 2.4;
       }
       ${container} .fsm-edge.dragging .fsm-edge-arrow {
-        fill: #2563eb;
+        fill: #0d9488;
       }
       ${container} .fsm-start-line {
         stroke: #111827;
-        stroke-width: 1.5;
+        stroke-width: 4.5;
         vector-effect: non-scaling-stroke;
         fill: none;
       }
@@ -1755,7 +1755,7 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       }
 
       ${container} .fsm-edge-label {
-        font-size: 2.8px;
+        font-size: 16.8px;
         dominant-baseline: middle;
         paint-order: stroke fill;
         fill: #111827;
@@ -1794,8 +1794,8 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       ${container} .fsm-edge-label-editor.invalid,
       ${container} .fsm-node-label-editor.invalid,
       ${container} .fsm-node-inner-editor.invalid {
-        border: 0.05px dashed #dc2626dd;
-        border-radius: 1px;
+        border: 2px dashed #dc2626dd;
+        border-radius: 6px;
       }
 
       ${validationContainer} + .fsm-validation,
@@ -1937,9 +1937,9 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       }
 
       ${container} .fsm-add-preview {
-        fill: rgba(37, 99, 235, 0.12); /* blue-600 soft */
-        stroke: #2563eb;
-        stroke-width: 0.2;
+        fill: rgba(13, 148, 136, 0.12); /* teal-600 soft */
+        stroke: #0d9488;
+        stroke-width: 1.2;
         pointer-events: none;
       }
 
@@ -2042,7 +2042,7 @@ function selfLoopArcParams(center: Vec2, r: number, theta: number) {
   return { center: Cs, radius: Rs, startAngle, endAngle, startPt, endPt, largeArcFlag, sweepFlag }
 }
 
-function arrowHeadPoints(tip: Vec2, dirUnit: Vec2, len = 2.5, wid = 1.8): string {
+function arrowHeadPoints(tip: Vec2, dirUnit: Vec2, len = 15, wid = 10.8): string {
   const baseX = tip.x - len * dirUnit.x
   const baseY = tip.y - len * dirUnit.y
   const px = -dirUnit.y
