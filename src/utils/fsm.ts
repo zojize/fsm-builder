@@ -14,9 +14,9 @@ export interface FSMOptions {
   sidebar?: boolean
   onChange?: (state: FSMState) => void
   fontSizeBreakpoints?: {
-    innerNode?: Record<number, string>
-    outerNode?: Record<number, string>
-    edge?: Record<number, string>
+    innerNode?: number | Record<number, string>
+    outerNode?: number | Record<number, string>
+    edge?: number | Record<number, string>
   }
   validate?: false | {
     edge?: ValidateOptions
@@ -31,7 +31,7 @@ export type EdgeId = string
 
 export interface FSMTransition {
   to: NodeId
-  // TODO: label position & style
+  // TODO: label style
   label: string
   offset: number
   rotation?: number
@@ -69,28 +69,18 @@ const defaultFSMOptions = {
   container: undefined!,
   svgAttributes: {},
   initialState: { nodes: {} },
-  defaultRadius: 30,
+  defaultRadius: 35,
   fontFamily: ' ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "DejaVu Sans Mono", "Roboto Mono", "Noto Sans Mono", monospace',
   fontSizeBreakpoints: {
-    edge: { 5: '13.8px', 8: '12.0px' }, // Scale edge labels
-    innerNode: { 5: '18.0px', 10: '15.0px' }, // Scale inner node labels
-    outerNode: { 15: '18.0px', 25: '15.0px' }, // Scale outer node labels
+    edge: { 5: '15px', 8: '13px' },
+    innerNode: { 3: '19px', 5: '16px' },
+    outerNode: { 15: '19px', 25: '16px' },
   },
   validate: false,
   sidebar: true,
   readonly: false,
   debug: false,
 } satisfies FSMOptions
-
-function getFontSize(textLength: number, breakpoints: Record<number, string>, defaultSize: string): string {
-  const lengths = Object.keys(breakpoints).map(Number).sort((a, b) => b - a) // descending
-  for (const len of lengths) {
-    if (textLength >= len) {
-      return breakpoints[len]
-    }
-  }
-  return defaultSize
-}
 
 // XHTML namespace for HTML content inside foreignObject
 const XHTML_NS = 'http://www.w3.org/1999/xhtml'
@@ -118,7 +108,9 @@ export function createFSMBuilder({
   }
 
   const fsmState: FSMState = initialState
-  const isReadonly = Boolean(readonly)
+  fontSizeBreakpoints.edge ??= defaultFSMOptions.fontSizeBreakpoints.edge
+  fontSizeBreakpoints.innerNode ??= defaultFSMOptions.fontSizeBreakpoints.innerNode
+  fontSizeBreakpoints.outerNode ??= defaultFSMOptions.fontSizeBreakpoints.outerNode
 
   // Validation configuration
   const validateConfig = validate
@@ -126,9 +118,9 @@ export function createFSMBuilder({
   let validationEl: HTMLDivElement | null = null
 
   // Default font sizes
-  const defaultEdgeFontSize = '16.8px'
-  const defaultInnerNodeFontSize = '19.2px'
-  const defaultOuterNodeFontSize = '21px'
+  const defaultEdgeFontSize = '18px'
+  const defaultInnerNodeFontSize = '21px'
+  const defaultOuterNodeFontSize = '23px'
 
   const nodeAbortControllers: Record<NodeId, AbortController> = {}
   for (const id of Object.keys(fsmState.nodes)) {
@@ -169,16 +161,15 @@ export function createFSMBuilder({
   // default edit mode for CSS-based selected tool styling
   ;(fsmContainer as HTMLElement).dataset.editMode = 'default'
 
-  if (!isReadonly) {
+  if (!readonly) {
     registerGlobalEvents()
   }
 
   const validationContainer = (validationEnabled && validateConfig && validateConfig.container) || container
   fsmContainer.appendChild(getStyle(container, fontFamily, validationContainer))
-  fsmContainer.style.position ??= 'relative'
 
   // Sidebar is always rendered in debug mode; otherwise follow the 'sidebar' option
-  if (!isReadonly && (debug || sidebar)) {
+  if (!readonly && (debug || sidebar)) {
     createSidebar(fsmContainer)
   }
 
@@ -200,7 +191,7 @@ export function createFSMBuilder({
   createStartMarker()
 
   // Create validation messages container below the SVG if enabled (skip in readonly)
-  if (validationEnabled && !isReadonly) {
+  if (validationEnabled && !readonly) {
     let validationContainer = fsmContainer
     if (validateConfig && validateConfig.container) {
       validationContainer = document.querySelector(validateConfig.container)!
@@ -506,7 +497,7 @@ export function createFSMBuilder({
 
   function createNewEdge(source: NodeId, transition: FSMTransition) {
     // Offset distance for edge labels in left/right modes so labels don't touch the edge
-    const LABEL_NORMAL_OFFSET = 10.8
+    const LABEL_NORMAL_OFFSET = 12
 
     const id = createEdgeId()
     if (id in edgeIdToTransition && debug) {
@@ -588,14 +579,14 @@ export function createFSMBuilder({
       edgeFO.dataset.from = from
       edgeFO.dataset.to = transition.to
       edgeFO.dataset.edgeId = id
-      const fontSize = getFontSize((transition.label || '').length, fontSizeBreakpoints?.edge || {}, defaultEdgeFontSize)
+      const fontSize = getFontSize((transition.label || '').length, fontSizeBreakpoints?.edge, defaultEdgeFontSize)
       const ew = getTextWidth(transition.label || 'M', `${fontSize} normal ${fontFamily}`)
-      const eh = 36
+      const eh = 40
       const pos0 = edgeLabelFOPosition(layout, ew, eh)
       setFOBounds(edgeFO, pos0.x, pos0.y, ew, eh)
       // Clip the editor under nodes the same way edges are clipped
       // edgeFO.setAttribute('mask', 'url(#edge-mask)')
-      if (isReadonly) {
+      if (readonly) {
         const textEl = createFOText(transition.label || '', fontSize, layout.textAnchor === 'middle' ? 'center' : layout.textAnchor === 'start' ? 'left' : 'right')
         edgeFO.appendChild(textEl)
       }
@@ -623,19 +614,19 @@ export function createFSMBuilder({
             ev.stopPropagation()
             edgeInput.blur()
           }
-          if (
-            edgeInput.pattern !== ''
-            && ev.key.length === 1
-            && !new RegExp(edgeInput.pattern).test(edgeInput.value + ev.key)
-          ) {
-            ev.preventDefault()
-          }
         })
         stopPointerEventPropagation(edgeInput)
-        edgeInput.addEventListener('input', () => {
+        let prevState = saveInputState(edgeInput)
+        edgeInput.addEventListener('selectionchange', () => void (prevState = saveInputState(edgeInput)))
+        edgeInput.addEventListener('input', (ev) => {
+          if (editIsInvalid(ev)) {
+            restoreInputState(edgeInput, prevState)
+            return
+          }
+          prevState = saveInputState(edgeInput)
           const [, trans] = edgeIdToTransition[id]
           trans.label = edgeInput.value
-          const newFontSize = getFontSize(edgeInput.value.length, fontSizeBreakpoints?.edge || {}, defaultEdgeFontSize)
+          const newFontSize = getFontSize(edgeInput.value.length, fontSizeBreakpoints?.edge, defaultEdgeFontSize)
           edgeInput.style.fontSize = newFontSize
           const width = getTextWidth(edgeInput.value || 'M', `${newFontSize} normal ${fontFamily}`)
           // TODO: this can be moved to focus event to avoid recomputing geometry
@@ -880,11 +871,11 @@ export function createFSMBuilder({
 
   function createNewNode(id: NodeId, node: FSMNode) {
     // Extra vertical gap between node circle and the outer label editor
-    const OUTER_LABEL_GAP = 4.8
+    const OUTER_LABEL_GAP = 5
 
     const el = createNodeEl(svg, id, node)
     initializeNodeLabelEditors(svg, id, node)
-    if (!isReadonly) {
+    if (!readonly) {
       initializeNodeInteraction(el, svg, id, node)
     }
     nodesGroup.appendChild(el)
@@ -916,15 +907,15 @@ export function createFSMBuilder({
       // Inner editor (centered)
       let innerFO = svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-inner-editor[data-node-id="${id}"]`)
       const ewInner = node.radius * 2
-      const ehInner = 36
+      const ehInner = 40
       const ix = node.x - ewInner / 2
       const iy = node.y - ehInner / 2
       if (!innerFO) {
         innerFO = createSvgEl('foreignObject')
         innerFO.classList.add('fsm-node-inner-editor')
         innerFO.dataset.nodeId = id
-        const fontSize = getFontSize((fsmState.nodes[id].innerLabel || '').length, fontSizeBreakpoints?.innerNode || {}, defaultInnerNodeFontSize)
-        if (isReadonly) {
+        const fontSize = getFontSize((fsmState.nodes[id].innerLabel || '').length, fontSizeBreakpoints?.innerNode, defaultInnerNodeFontSize)
+        if (readonly) {
           const text = createFOText(fsmState.nodes[id].innerLabel || '', fontSize, 'center')
           innerFO.appendChild(text)
         }
@@ -948,21 +939,21 @@ export function createFSMBuilder({
               ev.stopPropagation()
               input.blur()
             }
-            if (
-              input.pattern !== ''
-              && ev.key.length === 1
-              && !new RegExp(input.pattern).test(input.value + ev.key)
-            ) {
-              ev.preventDefault()
-            }
           })
           stopPointerEventPropagation(input)
-          input.addEventListener('input', () => {
+          let prevState = saveInputState(input)
+          input.addEventListener('selectionchange', () => void (prevState = saveInputState(input)))
+          input.addEventListener('input', (ev) => {
+            if (editIsInvalid(ev)) {
+              restoreInputState(input, prevState)
+              return
+            }
+            prevState = saveInputState(input)
             const n = getNode(id)
             if (n) {
               n.innerLabel = input.value
             }
-            input.style.fontSize = getFontSize(input.value.length, fontSizeBreakpoints?.innerNode || {}, defaultInnerNodeFontSize)
+            input.style.fontSize = getFontSize(input.value.length, fontSizeBreakpoints?.innerNode, defaultInnerNodeFontSize)
             tryOnChange(fsmState)
             if (validationEnabled) {
               runValidation()
@@ -973,18 +964,18 @@ export function createFSMBuilder({
         overlay.appendChild(innerFO)
       }
       setFOBounds(innerFO, ix, iy, ewInner, ehInner)
-      if (!isReadonly) {
+      if (!readonly) {
         const innerInput = innerFO.querySelector<HTMLInputElement>('input.fsm-input')
         if (innerInput && document.activeElement !== innerInput) {
           innerInput.value = fsmState.nodes[id].innerLabel || ''
-          innerInput.style.fontSize = getFontSize(innerInput.value.length, fontSizeBreakpoints?.innerNode || {}, defaultInnerNodeFontSize)
+          innerInput.style.fontSize = getFontSize(innerInput.value.length, fontSizeBreakpoints?.innerNode, defaultInnerNodeFontSize)
         }
       }
       // Outer editor (below node)
       let outerFO = svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-label-editor[data-node-id="${id}"]`)
-      const fontSize = getFontSize((node.label || '').length, fontSizeBreakpoints?.outerNode || {}, defaultOuterNodeFontSize)
+      const fontSize = getFontSize((node.label || '').length, fontSizeBreakpoints?.outerNode, defaultOuterNodeFontSize)
       const ewOuter = getTextWidth(node.label || 'M', `${fontSize} normal ${fontFamily}`)
-      const ehOuter = 36
+      const ehOuter = 40
       const oyAnchor = node.y + node.radius + 12 + OUTER_LABEL_GAP
       const ox = node.x - ewOuter / 2
       const oy = oyAnchor - ehOuter / 2
@@ -992,7 +983,7 @@ export function createFSMBuilder({
         outerFO = createSvgEl('foreignObject') as SVGForeignObjectElement
         outerFO.classList.add('fsm-node-label-editor')
         outerFO.dataset.nodeId = id
-        if (isReadonly) {
+        if (readonly) {
           const text = createFOText(node.label || '', fontSize, 'center')
           outerFO.appendChild(text)
         }
@@ -1018,21 +1009,21 @@ export function createFSMBuilder({
               ev.stopPropagation()
               input.blur()
             }
-            if (
-              input.pattern !== ''
-              && ev.key.length === 1
-              && !new RegExp(input.pattern).test(input.value + ev.key)
-            ) {
-              ev.preventDefault()
-            }
           })
           stopPointerEventPropagation(input)
-          input.addEventListener('input', () => {
+          let prevState = saveInputState(input)
+          input.addEventListener('selectionchange', () => void (prevState = saveInputState(input)))
+          input.addEventListener('input', (ev) => {
+            if (editIsInvalid(ev)) {
+              restoreInputState(input, prevState)
+              return
+            }
+            prevState = saveInputState(input)
             const n = getNode(id)
             if (n) {
               n.label = input.value
             }
-            const newFontSize = getFontSize(input.value.length, fontSizeBreakpoints?.outerNode || {}, defaultOuterNodeFontSize)
+            const newFontSize = getFontSize(input.value.length, fontSizeBreakpoints?.outerNode, defaultOuterNodeFontSize)
             input.style.fontSize = newFontSize
             const width = getTextWidth(input.value || 'M', `${newFontSize} normal ${fontFamily}`)
             const x = node.x - width / 2
@@ -1048,11 +1039,11 @@ export function createFSMBuilder({
         overlay.appendChild(outerFO)
       }
       setFOBounds(outerFO, ox, oy, ewOuter, ehOuter)
-      if (!isReadonly) {
+      if (!readonly) {
         const outerInput = outerFO.querySelector<HTMLInputElement>('input.fsm-input')
         if (outerInput && document.activeElement !== outerInput) {
           outerInput.value = node.label || ''
-          outerInput.style.fontSize = getFontSize(outerInput.value.length, fontSizeBreakpoints?.outerNode || {}, defaultOuterNodeFontSize)
+          outerInput.style.fontSize = getFontSize(outerInput.value.length, fontSizeBreakpoints?.outerNode, defaultOuterNodeFontSize)
         }
       }
     }
@@ -1200,7 +1191,7 @@ export function createFSMBuilder({
         const innerFO = svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-inner-editor[data-node-id="${id}"]`)
         if (innerFO) {
           const ewInner = node.radius * 2
-          const ehInner = 36
+          const ehInner = 40
           innerFO.setAttribute('x', `${nx - ewInner / 2}`)
           innerFO.setAttribute('y', `${ny - ehInner / 2}`)
           innerFO.setAttribute('width', `${ewInner}`)
@@ -1209,7 +1200,7 @@ export function createFSMBuilder({
         const outerFO = svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-label-editor[data-node-id="${id}"]`)
         if (outerFO) {
           const ewOuter = outerFO.width.baseVal.value
-          const ehOuter = 36
+          const ehOuter = 40
           const oyAnchor = ny + node.radius + 12 + OUTER_LABEL_GAP
           outerFO.setAttribute('x', `${nx - ewOuter / 2}`)
           outerFO.setAttribute('y', `${oyAnchor - ehOuter / 2}`)
@@ -1372,13 +1363,13 @@ export function createFSMBuilder({
     }
 
     function updateStartMarker(node: FSMNode) {
-      const s = { x: node.x - node.radius - 36, y: node.y }
+      const s = { x: node.x - node.radius - 40, y: node.y }
       const tip = { x: node.x - node.radius, y: node.y }
       const dir = unitVec(tip.x - s.x, tip.y - s.y)
       line.setAttribute('d', `M ${s.x} ${s.y} L ${tip.x} ${tip.y}`)
       line.classList.add('fsm-start-line')
       arrow.classList.add('fsm-start-arrow')
-      arrow.setAttribute('points', arrowHeadPoints(tip, dir, 12, 12))
+      arrow.setAttribute('points', arrowHeadPoints(tip, dir, 13, 13))
     }
   }
 
@@ -1621,6 +1612,58 @@ export function createFSMBuilder({
 
 // #region Element helpers
 
+function getFontSize(textLength: number, breakpoints: number | string | Record<number, string> | undefined, defaultSize: string): string {
+  if (typeof breakpoints === 'number') {
+    return `${breakpoints}px`
+  }
+  if (typeof breakpoints === 'string') {
+    return breakpoints
+  }
+  if (breakpoints == null) {
+    return defaultSize
+  }
+
+  // descending
+  const lengths = Object.keys(breakpoints).map(Number).sort((a, b) => b - a)
+  if (lengths.length === 0) {
+    return defaultSize
+  }
+
+  for (const len of lengths) {
+    if (textLength >= len) {
+      return breakpoints[len]
+    }
+  }
+
+  return breakpoints[lengths[lengths.length - 1]] ?? defaultSize
+}
+
+// FIXME: this does not handle cut/paste, delete, drag-drop, IME, etc.
+function editIsInvalid(ev: InputEvent): boolean {
+  const input = ev.target as HTMLInputElement
+  const pattern = input.pattern
+  if (!pattern) {
+    return false
+  }
+  return !new RegExp(pattern).test(input.value)
+}
+
+function saveInputState(input: HTMLInputElement) {
+  return {
+    value: input.value,
+    selectionStart: input.selectionStart,
+    selectionEnd: input.selectionEnd,
+    selectionDirection: input.selectionDirection,
+  }
+}
+
+function restoreInputState(input: HTMLInputElement, state: ReturnType<typeof saveInputState>) {
+  input.value = state.value
+  if (state.selectionStart !== null && state.selectionEnd !== null) {
+    input.setSelectionRange(state.selectionStart, state.selectionEnd, state.selectionDirection ?? 'none')
+  }
+}
+
 function createSvgEl<K extends keyof SVGElementTagNameMap>(tagName: K) {
   return document.createElementNS('http://www.w3.org/2000/svg', tagName)
 }
@@ -1688,9 +1731,14 @@ function legacyCopy(value: string) {
 
 // #region Style
 
+// TODO: Just use a static CSS file
 function getStyle(container: string, fontFamily: string, validationContainer: string) {
   const style = createSvgEl('style')
   style.textContent = `
+      ${container} {
+        position: relative;
+      }
+
       ${container} .fsm-node-circle {
         fill: rgba(0, 0, 255, 0.08);
         stroke: black;
@@ -1700,9 +1748,9 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
 
 
       ${container} .fsm-node:hover .fsm-node-circle {
-        stroke: #0d9488; /* teal-600 */
+        stroke: #2563eb; /* blue-600 */
         cursor: grab;
-        fill: rgba(13, 148, 136, 0.15);
+        fill: rgba(37, 99, 235, 0.15);
       }
 
       /* SVG node label styles removed (replaced by FO editors) */
@@ -1731,22 +1779,22 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       }
 
       ${container} .fsm-edge:hover .fsm-edge-path {
-        stroke: #0d9488;
+        stroke: #2563eb;
         stroke-width: 2.4;
       }
       ${container} .fsm-edge:hover .fsm-edge-arrow {
-        fill: #0d9488;
+        fill: #2563eb;
       }
       ${container} .fsm-edge.dragging .fsm-edge-path {
-        stroke: #0d9488;
+        stroke: #2563eb;
         stroke-width: 2.4;
       }
       ${container} .fsm-edge.dragging .fsm-edge-arrow {
-        fill: #0d9488;
+        fill: #2563eb;
       }
       ${container} .fsm-start-line {
         stroke: #111827;
-        stroke-width: 4.5;
+        stroke-width: 1.5;
         vector-effect: non-scaling-stroke;
         fill: none;
       }
@@ -1755,7 +1803,7 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       }
 
       ${container} .fsm-edge-label {
-        font-size: 16.8px;
+        font-size: 18px;
         dominant-baseline: middle;
         paint-order: stroke fill;
         fill: #111827;
@@ -1937,8 +1985,8 @@ function getStyle(container: string, fontFamily: string, validationContainer: st
       }
 
       ${container} .fsm-add-preview {
-        fill: rgba(13, 148, 136, 0.12); /* teal-600 soft */
-        stroke: #0d9488;
+        fill: rgba(37, 99, 235, 0.12); /* blue-600 soft */
+        stroke: #2563eb;
         stroke-width: 1.2;
         pointer-events: none;
       }
@@ -2042,7 +2090,7 @@ function selfLoopArcParams(center: Vec2, r: number, theta: number) {
   return { center: Cs, radius: Rs, startAngle, endAngle, startPt, endPt, largeArcFlag, sweepFlag }
 }
 
-function arrowHeadPoints(tip: Vec2, dirUnit: Vec2, len = 15, wid = 10.8): string {
+function arrowHeadPoints(tip: Vec2, dirUnit: Vec2, len = 16, wid = 12): string {
   const baseX = tip.x - len * dirUnit.x
   const baseY = tip.y - len * dirUnit.y
   const px = -dirUnit.y
