@@ -106,7 +106,7 @@ export function createFSMBuilder({
   if (!fsmContainer) {
     throw new Error(`FSM: Element with selector ${container} not found`)
   }
-
+  const maskId = `edge-mask-${Math.random().toString(16).slice(2)}`
   const fsmState: FSMState = initialState
   fontSizeBreakpoints.edge ??= defaultFSMOptions.fontSizeBreakpoints.edge
   fontSizeBreakpoints.innerNode ??= defaultFSMOptions.fontSizeBreakpoints.innerNode
@@ -421,7 +421,7 @@ export function createFSMBuilder({
   // Mask to prevent edges from being drawn on top of nodes
   function createEdgeMasks(state: FSMState) {
     const mask = createSvgEl('mask')
-    mask.setAttribute('id', 'edge-mask')
+    mask.setAttribute('id', maskId)
     mask.setAttribute('maskUnits', 'userSpaceOnUse')
     mask.setAttribute('maskContentUnits', 'userSpaceOnUse')
     mask.setAttribute('x', '0')
@@ -520,7 +520,7 @@ export function createFSMBuilder({
       g.dataset.from = from
       g.dataset.to = transition.to
       g.dataset.edgeId = id
-      g.setAttribute('mask', 'url(#edge-mask)')
+      g.setAttribute('mask', `url(#${maskId})`)
 
       // Initial geometry
       const geom = computeEdgeGeom(id)
@@ -530,7 +530,7 @@ export function createFSMBuilder({
       const arrow = createSvgEl('polygon')
       arrow.classList.add('fsm-edge-arrow')
       arrow.setAttribute('points', arrowHeadPoints(geom.tipPt, geom.tangUnit))
-      arrow.setAttribute('mask', 'url(#edge-mask)')
+      arrow.setAttribute('mask', `url(#${maskId})`)
       g.appendChild(arrow)
       g.appendChild(hitPath)
       g.appendChild(path)
@@ -584,8 +584,6 @@ export function createFSMBuilder({
       const eh = 40
       const pos0 = edgeLabelFOPosition(layout, ew, eh)
       setFOBounds(edgeFO, pos0.x, pos0.y, ew, eh)
-      // Clip the editor under nodes the same way edges are clipped
-      // edgeFO.setAttribute('mask', 'url(#edge-mask)')
       if (readonly) {
         const textEl = createFOText(transition.label || '', fontSize, layout.textAnchor === 'middle' ? 'center' : layout.textAnchor === 'start' ? 'left' : 'right')
         edgeFO.appendChild(textEl)
@@ -1083,7 +1081,7 @@ export function createFSMBuilder({
         const liveRadius = node.radius
         // Create a preview edge group (path + arrow) for real-time feedback
         const previewG = createSvgEl('g')
-        previewG.setAttribute('mask', 'url(#edge-mask)')
+        previewG.setAttribute('mask', `url(#${maskId})`)
         previewG.classList.add('fsm-edge', 'preview')
         const previewPath = createSvgEl('path')
         previewPath.classList.add('fsm-edge-path')
@@ -1624,13 +1622,13 @@ function getFontSize(textLength: number, breakpoints: number | string | Record<n
   }
 
   // descending
-  const lengths = Object.keys(breakpoints).map(Number).sort((a, b) => b - a)
+  const lengths = Object.keys(breakpoints).map(Number).sort((a, b) => a - b)
   if (lengths.length === 0) {
     return defaultSize
   }
 
   for (const len of lengths) {
-    if (textLength >= len) {
+    if (textLength <= len) {
       return breakpoints[len]
     }
   }
