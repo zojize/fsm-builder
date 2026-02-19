@@ -1,6 +1,8 @@
+import './fsm.css'
+
 export interface ValidateOptions {
   inputAttributes?: Partial<HTMLElementTagNameMap['input']>
-  validate?: (input: string) => boolean | string | void
+  validate?: (input: string, fsmState: FSMState, nodeOrTransition: FSMNode | FSMTransition) => boolean | string | void
 }
 
 export interface FSMOptions {
@@ -12,6 +14,7 @@ export interface FSMOptions {
   readonly?: boolean
   debug?: boolean
   sidebar?: boolean
+  scale?: number
   onChange?: (state: FSMState) => void
   fontSizeBreakpoints?: {
     innerNode?: number | Record<number, string>
@@ -70,9 +73,9 @@ const defaultFSMOptions = {
   svgAttributes: {},
   initialState: { nodes: {} },
   defaultRadius: 35,
-  fontFamily: ' ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "DejaVu Sans Mono", "Roboto Mono", "Noto Sans Mono", monospace',
+  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "DejaVu Sans Mono", "Roboto Mono", "Noto Sans Mono", monospace',
   fontSizeBreakpoints: {
-    edge: { 5: '15px', 8: '13px' },
+    edge: { 5: '18px', 8: '15px' },
     innerNode: { 3: '19px', 5: '16px' },
     outerNode: { 15: '19px', 25: '16px' },
   },
@@ -80,10 +83,15 @@ const defaultFSMOptions = {
   sidebar: true,
   readonly: false,
   debug: false,
+  scale: 1,
 } satisfies FSMOptions
 
 // XHTML namespace for HTML content inside foreignObject
 const XHTML_NS = 'http://www.w3.org/1999/xhtml'
+
+// TODO:
+// redo/undo
+// simulation mode
 
 export function createFSMBuilder({
   container,
@@ -96,6 +104,7 @@ export function createFSMBuilder({
   validate = defaultFSMOptions.validate,
   sidebar = defaultFSMOptions.sidebar,
   fontSizeBreakpoints = defaultFSMOptions.fontSizeBreakpoints,
+  scale = defaultFSMOptions.scale,
   onChange,
 }: FSMOptions = defaultFSMOptions) {
   if (!container) {
@@ -106,6 +115,7 @@ export function createFSMBuilder({
   if (!fsmContainer) {
     throw new Error(`FSM: Element with selector ${container} not found`)
   }
+  fsmContainer.classList.add('fsm-builder')
   const maskId = `edge-mask-${Math.random().toString(16).slice(2)}`
   const fsmState: FSMState = initialState
   fontSizeBreakpoints.edge ??= defaultFSMOptions.fontSizeBreakpoints.edge
@@ -118,9 +128,9 @@ export function createFSMBuilder({
   let validationEl: HTMLDivElement | null = null
 
   // Default font sizes
-  const defaultEdgeFontSize = '18px'
-  const defaultInnerNodeFontSize = '21px'
-  const defaultOuterNodeFontSize = '23px'
+  const defaultEdgeFontSize = '20px'
+  const defaultInnerNodeFontSize = '23px'
+  const defaultOuterNodeFontSize = '25px'
 
   const nodeAbortControllers: Record<NodeId, AbortController> = {}
   for (const id of Object.keys(fsmState.nodes)) {
@@ -165,8 +175,8 @@ export function createFSMBuilder({
     registerGlobalEvents()
   }
 
-  const validationContainer = (validationEnabled && validateConfig && validateConfig.container) || container
-  fsmContainer.appendChild(getStyle(container, fontFamily, validationContainer))
+  // maybe this can just be a fixed value?
+  fsmContainer.style.setProperty('--fsm-font-family', fontFamily)
 
   // Sidebar is always rendered in debug mode; otherwise follow the 'sidebar' option
   if (!readonly && (debug || sidebar)) {
@@ -201,6 +211,10 @@ export function createFSMBuilder({
         }
         validationContainer = fsmContainer
       }
+    }
+    // Propagate CSS variable if validation is in a separate container
+    if (validationContainer !== fsmContainer) {
+      validationContainer.style.setProperty('--fsm-font-family', fontFamily)
     }
     validationEl = document.createElement('div')
     validationEl.className = 'fsm-validation'
@@ -257,7 +271,9 @@ export function createFSMBuilder({
       }
       let res: boolean | string | void
       try {
-        res = validator(input.value)
+        const isNode = kind === 'innerNode' || kind === 'outerNode'
+        const nodeOrEdge = isNode ? getNode(fo.dataset.nodeId!)! : edgeIdToTransition[fo.dataset.edgeId!][1]
+        res = validator(input.value, fsmState, nodeOrEdge)
       }
       catch {
         // Treat exceptions as invalid with default message
@@ -327,6 +343,8 @@ export function createFSMBuilder({
     // Tabler icons - MIT license
     const linkIcon = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1em\' height=\'1em\' viewBox=\'0 0 24 24\'%3E%3C!-- Icon from Tabler Icons by Paweł Kuna - https://github.com/tabler/tabler-icons/blob/master/LICENSE --%3E%3Cpath fill=\'none\' stroke=\'currentColor\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M11 12h10m-3-3l3 3l-3 3M7 12a2 2 0 1 1-4 0a2 2 0 0 1 4 0\'/%3E%3C/svg%3E'
 
+    const startStateIcon = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'32\' viewBox=\'0 0 24 24\'%3E%3C!-- Icon from Google Material Icons by Material Design Authors - https://github.com/material-icons/material-icons/blob/master/LICENSE --%3E%3Cpath fill=\'currentColor\' d=\'M15.29 17.29c.39.39 1.02.39 1.41 0l4.59-4.59a.996.996 0 0 0 0-1.41L16.7 6.7a.996.996 0 0 0-1.41 0c-.38.39-.39 1.03 0 1.42L18.17 11H7c-.55 0-1 .45-1 1s.45 1 1 1h11.17l-2.88 2.88a.996.996 0 0 0 0 1.41M3 18c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1s-1 .45-1 1v10c0 .55.45 1 1 1\'/%3E%3C/svg%3E'
+
     // custom icon
     // TODO: implement toggle radius
     // const toggleResizeIcon = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1em\' height=\'1em\' viewBox=\'0 0 100 100\'%3E %3Ccircle cx=\'50\' cy=\'50\' r=\'37.5\' fill=\'none\' stroke=\'currentColor\' stroke-dasharray=\'13\' stroke-width=\'4\' class=\'cls-1\'/%3E %3Ccircle cx=\'50\' cy=\'50\' r=\'25\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'5\' class=\'cls-1\'/%3E %3C/svg%3E'
@@ -369,13 +387,40 @@ export function createFSMBuilder({
 
     const tools: Array<[title: string, icon: string, mode: string]> = [
       ['Select', cursorIcon, 'default'],
-      ['Link', linkIcon, 'link'],
+      ['Add Transition', linkIcon, 'link'],
       ['Add node', addIcon, 'add'],
+      ['Set start', startStateIcon, 'start'],
       ['Remove', removeIcon, 'remove'],
     ]
     for (const [label, icon, mode] of tools) {
       list.appendChild(makeBtn(label, icon, mode))
     }
+
+    // Clear all nodes and edges
+    const clearAllIcon = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1em\' height=\'1em\' viewBox=\'0 0 32 32\'%3E%3C!-- Icon from Carbon by IBM - undefined --%3E%3Cpath fill=\'%23ef4444\' d=\'M12 12h2v12h-2zm6 0h2v12h-2z\'/%3E%3Cpath fill=\'%23ef4444\' d=\'M4 6v2h2v20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h2V6zm4 22V8h16v20zm4-26h8v2h-8z\'/%3E%3C/svg%3E'
+    const clearBtn = document.createElement('button')
+    clearBtn.type = 'button'
+    clearBtn.className = 'fsm-tool-btn'
+    clearBtn.title = 'Clear all'
+    const clearImg = document.createElement('img')
+    clearImg.alt = 'Clear all'
+    clearImg.draggable = false
+    clearImg.src = clearAllIcon
+    clearBtn.appendChild(clearImg)
+    clearBtn.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const nodeCount = Object.keys(fsmState.nodes).length
+      if (nodeCount === 0)
+        return
+      // eslint-disable-next-line no-alert
+      if (!confirm(`Remove all ${nodeCount} state${nodeCount === 1 ? '' : 's'} and their transitions?`))
+        return
+      for (const id of Object.keys(fsmState.nodes)) {
+        removeNode(id)
+      }
+    })
+    list.appendChild(clearBtn)
 
     // Debug utility: copy current FSM state to clipboard
     if (debug) {
@@ -592,6 +637,7 @@ export function createFSMBuilder({
         const edgeInput = document.createElementNS(XHTML_NS, 'input') as HTMLInputElement
         edgeInput.type = 'text'
         edgeInput.autocomplete = 'off'
+        edgeInput.maxLength = 50
         edgeInput.classList.add('fsm-input')
         edgeInput.dataset.validateType = 'edge'
         if (validationEnabled) {
@@ -921,6 +967,7 @@ export function createFSMBuilder({
           const input = document.createElementNS(XHTML_NS, 'input') as HTMLInputElement
           input.type = 'text'
           input.autocomplete = 'off'
+          input.maxLength = 50
           input.classList.add('fsm-input')
           input.dataset.validateType = 'innerNode'
           if (validationEnabled) {
@@ -972,7 +1019,7 @@ export function createFSMBuilder({
       // Outer editor (below node)
       let outerFO = svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-label-editor[data-node-id="${id}"]`)
       const fontSize = getFontSize((node.label || '').length, fontSizeBreakpoints?.outerNode, defaultOuterNodeFontSize)
-      const ewOuter = getTextWidth(node.label || 'M', `${fontSize} normal ${fontFamily}`)
+      const ewOuter = getTextWidth(node.label || 'label', `${fontSize} normal ${fontFamily}`)
       const ehOuter = 40
       const oyAnchor = node.y + node.radius + 12 + OUTER_LABEL_GAP
       const ox = node.x - ewOuter / 2
@@ -992,6 +1039,7 @@ export function createFSMBuilder({
             input.focus()
           })
           input.type = 'text'
+          input.maxLength = 50
           input.classList.add('fsm-input')
           input.dataset.validateType = 'outerNode'
           if (validationEnabled) {
@@ -1000,7 +1048,7 @@ export function createFSMBuilder({
           }
           input.style.fontSize = fontSize
           input.style.textAlign = 'center'
-          input.value = node.label || ''
+          input.value = node.label.length === 0 ? 'label' : node.label
           input.addEventListener('keydown', (ev) => {
             if (ev.key === 'Enter' || ev.key === 'Escape') {
               ev.preventDefault()
@@ -1023,7 +1071,7 @@ export function createFSMBuilder({
             }
             const newFontSize = getFontSize(input.value.length, fontSizeBreakpoints?.outerNode, defaultOuterNodeFontSize)
             input.style.fontSize = newFontSize
-            const width = getTextWidth(input.value || 'M', `${newFontSize} normal ${fontFamily}`)
+            const width = getTextWidth(input.value || 'label', `${newFontSize} normal ${fontFamily}`)
             const x = node.x - width / 2
             outerFO!.setAttribute('width', `${width}`)
             outerFO!.setAttribute('x', `${x}`)
@@ -1037,13 +1085,6 @@ export function createFSMBuilder({
         overlay.appendChild(outerFO)
       }
       setFOBounds(outerFO, ox, oy, ewOuter, ehOuter)
-      if (!readonly) {
-        const outerInput = outerFO.querySelector<HTMLInputElement>('input.fsm-input')
-        if (outerInput && document.activeElement !== outerInput) {
-          outerInput.value = node.label || ''
-          outerInput.style.fontSize = getFontSize(outerInput.value.length, fontSizeBreakpoints?.outerNode, defaultOuterNodeFontSize)
-        }
-      }
     }
 
     function initializeNodeInteraction(g: SVGGElement, svg: SVGSVGElement, id: string, node: FSMNode) {
@@ -1067,8 +1108,14 @@ export function createFSMBuilder({
         }
         const trans = { to, label, offset, rotation }
         fromNode.transitions.push(trans)
-        createNewEdge(from, trans)
+        const edgeId = createNewEdge(from, trans)
         tryOnChange(fsmState)
+        // Auto-focus the newly created edge label input
+        const edgeInput = overlay.querySelector<HTMLInputElement>(`foreignObject.fsm-edge-label-editor[data-edge-id="${edgeId}"] input.fsm-input`)
+        if (edgeInput) {
+          edgeInput.style.pointerEvents = 'auto'
+          requestAnimationFrame(() => edgeInput.focus())
+        }
       }
       // Start link creation with Shift+drag from node
       const startLink = (e: PointerEvent) => {
@@ -1268,6 +1315,15 @@ export function createFSMBuilder({
           removeNode(id)
           return
         }
+        if (mode === 'start') {
+          if (fsmState.start !== id) {
+            fsmState.start = id
+            svg.dispatchEvent(new CustomEvent('fsm:set-start', { detail: id }))
+            tryOnChange(fsmState)
+          }
+          fsmContainer.dataset.editMode = 'default'
+          return
+        }
         if (mode !== 'default') {
           return
         }
@@ -1377,7 +1433,8 @@ export function createFSMBuilder({
     svg.setAttribute('height', '100%')
     const rect = (() => fsmContainer.getBoundingClientRect())()
     const aspectRatio = rect.width / rect.height
-    svg.setAttribute('viewBox', `0 0 ${600 * aspectRatio} 600`)
+    const baseHeight = 600 / scale
+    svg.setAttribute('viewBox', `0 0 ${baseHeight * aspectRatio} ${baseHeight}`)
     for (const [key, value] of Object.entries(svgAttributes)) {
       svg.setAttribute(key, value)
     }
@@ -1418,7 +1475,8 @@ export function createFSMBuilder({
     const resizeObserver = new ResizeObserver(() => {
       const rect = fsmContainer.getBoundingClientRect()
       const newAspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
-      svg.setAttribute('viewBox', `0 0 ${600 * newAspectRatio} 600`)
+      const baseHeight = 600 / scale
+      svg.setAttribute('viewBox', `0 0 ${baseHeight * newAspectRatio} ${baseHeight}`)
     })
     resizeObserver.observe(document.body)
 
@@ -1445,7 +1503,7 @@ export function createFSMBuilder({
       const radius = defaultRadius
       const id = createNodeId()
       const node = {
-        label: '',
+        label: 'label',
         innerLabel: '',
         x: pt.x,
         y: pt.y,
@@ -1503,7 +1561,14 @@ export function createFSMBuilder({
       const pt = clientToSvg(svg, e.clientX, e.clientY)
       const radius = defaultRadius
       const id = createNodeId()
-      const node = { label: '', innerLabel: '', x: pt.x, y: pt.y, radius, transitions: [] }
+      const node = {
+        label: 'label',
+        innerLabel: '',
+        x: pt.x,
+        y: pt.y,
+        radius,
+        transitions: [],
+      }
       fsmState.nodes[id] = node
       createNewNode(id, node)
       svg.dispatchEvent(new CustomEvent('fsm:update', { detail: { type: 'new-node', id } }))
@@ -1727,277 +1792,6 @@ function legacyCopy(value: string) {
 
 // #endregion
 
-// #region Style
-
-// TODO: Just use a static CSS file
-function getStyle(container: string, fontFamily: string, validationContainer: string) {
-  const style = createSvgEl('style')
-  style.textContent = `
-      ${container} {
-        position: relative;
-      }
-
-      ${container} .fsm-node-circle {
-        fill: rgba(0, 0, 255, 0.08);
-        stroke: black;
-        stroke-width: 1.2;
-        transition: stroke 120ms ease, fill 120ms ease;
-      }
-
-
-      ${container} .fsm-node:hover .fsm-node-circle {
-        stroke: #2563eb; /* blue-600 */
-        cursor: grab;
-        fill: rgba(37, 99, 235, 0.15);
-      }
-
-      /* SVG node label styles removed (replaced by FO editors) */
-
-      ${container} .fsm-edge-path {
-        fill: none;
-        stroke: #888888;
-        stroke-width: 2;
-        vector-effect: non-scaling-stroke;
-        pointer-events: none;
-        stroke-linecap: round;
-        transition: stroke 120ms ease, stroke-width 120ms ease;
-      }
-
-      ${container} .fsm-edge-hit {
-        fill: none;
-        stroke: transparent;
-        stroke-width: 20;
-        pointer-events: stroke;
-        cursor: grab;
-      }
-
-      ${container} .fsm-edge-arrow {
-        fill: #888888;
-        transition: fill 120ms ease;
-      }
-
-      ${container} .fsm-edge:hover .fsm-edge-path {
-        stroke: #2563eb;
-        stroke-width: 2.4;
-      }
-      ${container} .fsm-edge:hover .fsm-edge-arrow {
-        fill: #2563eb;
-      }
-      ${container} .fsm-edge.dragging .fsm-edge-path {
-        stroke: #2563eb;
-        stroke-width: 2.4;
-      }
-      ${container} .fsm-edge.dragging .fsm-edge-arrow {
-        fill: #2563eb;
-      }
-      ${container} .fsm-start-line {
-        stroke: #111827;
-        stroke-width: 1.5;
-        vector-effect: non-scaling-stroke;
-        fill: none;
-      }
-      ${container} .fsm-start-arrow {
-        fill: #111827;
-      }
-
-      ${container} .fsm-edge-label {
-        font-size: 18px;
-        dominant-baseline: middle;
-        paint-order: stroke fill;
-        fill: #111827;
-        user-select: none;
-      }
-      ${container} .fsm-node-inner-editor,
-      ${container} .fsm-edge-label-editor,
-      ${container} .fsm-node-label-editor {
-        display: flex;
-        justify-content: center;
-        overflow: visible;
-        pointer-events: all;
-      }
-      ${container} .fsm-text {
-        width: 100%;
-        height: 100%;
-        color: #111827;
-        font-family: ${fontFamily};
-        line-height: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      ${container} .fsm-input {
-        width: 100%;
-        height: 100%;
-        border: none;
-        outline: none;
-        background: transparent;
-        padding: 0;
-        margin: 0;
-        color: #111827;
-        font-family: ${fontFamily};
-      }
-
-      ${container} .fsm-edge-label-editor.invalid,
-      ${container} .fsm-node-label-editor.invalid,
-      ${container} .fsm-node-inner-editor.invalid {
-        border: 2px dashed #dc2626dd;
-        border-radius: 6px;
-      }
-
-      ${validationContainer} + .fsm-validation,
-      ${validationContainer} .fsm-validation {
-        margin-top: 6px;
-        font-family: ${fontFamily};
-        font-size: 12px;
-        color: #111827;
-        user-select: none;
-      }
-      ${validationContainer} .fsm-validation .ok {
-        color: #059669;
-      }
-      ${validationContainer} .fsm-validation ul {
-        list-style: none;
-        margin: 8px 0 0 0;
-        padding: 0;
-      }
-      ${validationContainer} .fsm-validation ul .item {
-        width: 100%;
-        padding: 8px 10px;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 6px 0;
-        box-sizing: border-box;
-      }
-      ${validationContainer} .fsm-validation ul .item.ok {
-        background: #ecfdf5; /* green-50 */
-        border: 1px solid #34d399; /* green-400 */
-        color: #065f46; /* green-800 */
-      }
-      ${validationContainer} .fsm-validation ul .item.error {
-        background: #fef2f2; /* red-50 */
-        border: 1px solid #f87171; /* red-400 */
-        color: #7f1d1d; /* red-800 */
-      }
-      ${validationContainer} .fsm-validation ul .item .icon {
-        width: 16px;
-        height: 16px;
-      }
-      ${validationContainer} .fsm-validation ul .item .msg {
-        flex: 1;
-      }
-
-      ${container} .fsm-sidebar {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 48px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 6px;
-        z-index: 10;
-        pointer-events: auto;
-        user-select: none;
-      }
-      ${container} .fsm-sidebar .fsm-sidebar-toggle {
-        width: 34px;
-        height: 34px;
-        display: grid;
-        place-items: center;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        background: #ffffff;
-        cursor: pointer;
-        padding: 0;
-        outline: none;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.04);
-        transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
-      }
-      ${container} .fsm-sidebar .fsm-sidebar-toggle:hover {
-        background: #f9fafb; /* gray-50 */
-        border-color: #d1d5db; /* gray-300 */
-      }
-      ${container} .fsm-sidebar .fsm-sidebar-toggle:active {
-        background: #f3f4f6; /* gray-100 */
-        transform: translateY(1px);
-      }
-      ${container} .fsm-sidebar .fsm-sidebar-toggle img {
-        width: 18px;
-        height: 18px;
-        transition: transform 160ms ease;
-      }
-      ${container} .fsm-sidebar.collapsed .fsm-sidebar-toggle img {
-        transform: rotate(-180deg);
-      }
-
-      ${container} .fsm-sidebar .fsm-tool-list {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        transform-origin: top;
-        transition: transform 160ms ease;
-        user-select: none;
-      }
-      ${container} .fsm-sidebar.collapsed .fsm-tool-list {
-        transform: scaleY(0);
-        pointer-events: none;
-      }
-      ${container} .fsm-sidebar .fsm-tool-btn {
-        width: 34px;
-        height: 34px;
-        display: grid;
-        place-items: center;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        background: #ffffff;
-        cursor: pointer;
-        padding: 0;
-        outline: none;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.04);
-        transition: background 140ms ease, border-color 140ms ease, transform 80ms ease;
-      }
-      ${container} .fsm-sidebar .fsm-tool-btn:hover {
-        background: #f9fafb;
-        border-color: #d1d5db;
-      }
-      ${container} .fsm-sidebar .fsm-tool-btn:active {
-        background: #f3f4f6;
-        transform: scale(0.98);
-      }
-      ${container} .fsm-sidebar .fsm-tool-btn img {
-        width: 18px;
-        height: 18px;
-      }
-
-      ${container}[data-edit-mode="default"] .fsm-tool-btn[data-mode="default"],
-      ${container}[data-edit-mode="link"] .fsm-tool-btn[data-mode="link"],
-      ${container}[data-edit-mode="add"] .fsm-tool-btn[data-mode="add"],
-      ${container}[data-edit-mode="remove"] .fsm-tool-btn[data-mode="remove"] {
-        background: #e5e7eb; /* gray-200 */
-        border-color: #9ca3af; /* gray-400 */
-      }
-
-      ${container} .fsm-add-preview {
-        fill: rgba(37, 99, 235, 0.12); /* blue-600 soft */
-        stroke: #2563eb;
-        stroke-width: 1.2;
-        pointer-events: none;
-      }
-
-      ${container}[data-edit-mode="remove"] .fsm-edge-hit,
-      ${container}[data-edit-mode="remove"] .fsm-node-circle {
-        caret-color: red;
-        cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1em' height='1em' viewBox='0 0 32 32'%3E%3Cpath fill='red' stroke='red' d='M12 12h2v12h-2zm6 0h2v12h-2z'/%3E%3Cpath fill='red' stroke='red' stroke-width='1.5' d='M4 6v2h2v20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8h2V6zm4 22V8h16v20zm4-26h8v2h-8z'/%3E%3C/svg%3E") 4 4, auto !important;
-      }
-    `
-  return style
-}
-
 // #endregion
 
 // #region Math/geometry helpers
@@ -2044,6 +1838,8 @@ function cubicTangent(p0: Vec2, p1: Vec2, p2: Vec2, p3: Vec2, t: number): Vec2 {
 // For a cubic where p1 and p2 are symmetric around the chord midpoint, B(0.5) = M + (3/4)*a*N
 // Choose a = (4/3)*offset to achieve desired midpoint offset.
 function controlFromOffsetCubic(p0: Vec2, p3: Vec2, offset: number): [Vec2, Vec2] {
+  // arbitrary scaling factors to make links more snappy with cursor
+  offset *= 1.5
   // dir: chord direction, n: normal
   const dir = unitVec(p3.x - p0.x, p3.y - p0.y)
   const n = perpLeft(dir)
