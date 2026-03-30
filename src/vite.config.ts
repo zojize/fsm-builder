@@ -2,7 +2,6 @@ import path from 'node:path'
 import { presetIcons } from 'unocss'
 import UnoCSS from 'unocss/vite'
 import { defineConfig } from 'vite'
-import dts from 'vite-plugin-dts'
 
 export default defineConfig({
   build: {
@@ -30,6 +29,5 @@ export default defineConfig({
         }),
       ],
     }),
-    dts({ exclude: ['vite.config.ts'] }),
   ],
 })

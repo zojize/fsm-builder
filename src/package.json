@@ -19,7 +19,7 @@
     "./style.css": "./dist/fsm-builder.css"
   },
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
@@ -27,7 +27,6 @@
     "@types/node": "^22.19.15",
     "typescript": "^6.0.2",
     "unocss": "^66.5.2",
-    "vite": "^8.0.3",
-    "vite-plugin-dts": "^4.5.4"
+    "vite": "^8.0.3"
   }
 }
