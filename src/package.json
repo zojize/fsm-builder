@@ -1,7 +1,7 @@
 {
-  "name": "fsm-builder",
+  "name": "@zojize/fsm-builder",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Interactive SVG-based FSM (Finite State Machine) builder library",
   "license": "MIT",
   "keywords": [
@@ -26,6 +26,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
