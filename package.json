@@ -7,7 +7,7 @@
     "playground"
   ],
   "scripts": {
-    "build": "bun run --filter='*' build",
+    "build": "bun run build:lib && bun run build:playground",
     "build:lib": "bun run --cwd src build",
     "build:playground": "bun run --cwd playground build",
     "dev": "bun run --cwd playground dev",
