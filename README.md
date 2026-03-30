@@ -4,7 +4,7 @@
 
 An interactive SVG-based finite state machine editor. Draw Moore-style DFAs and NFAs with per-state outputs directly in the browser.
 
-**[Live playground →](https://fsm-builder.netlify.app/)**
+**[Live playground →](https://zojize.github.io/fsm-builder/)**
 
 ---
 
