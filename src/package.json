@@ -1,7 +1,7 @@
 {
   "name": "fsm-builder",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Interactive SVG-based FSM (Finite State Machine) builder library",
   "license": "MIT",
   "keywords": [
@@ -9,6 +9,9 @@
     "finite-state-machine",
     "svg",
     "interactive"
+  ],
+  "sideEffects": [
+    "**/*.css"
   ],
   "exports": {
     ".": {
@@ -18,13 +21,21 @@
     },
     "./style.css": "./dist/fsm-builder.css"
   },
+  "main": "./dist/fsm-builder.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "bun run build",
+    "release": "bumpp && npm publish"
   },
   "devDependencies": {
     "@iconify-json/bi": "^1.2.7",
     "@types/node": "^22.19.15",
+    "bumpp": "^11.0.1",
     "typescript": "^6.0.2",
     "unocss": "^66.5.2",
     "vite": "^8.0.3"
