@@ -1,4 +1,6 @@
-# fsm-builder
+# @zojize/fsm-builder
+
+[![npm version](https://img.shields.io/npm/v/@zojize/fsm-builder?color=a1b858&label=npm)](https://www.npmjs.com/package/@zojize/fsm-builder)
 
 An interactive SVG-based finite state machine editor. Draw Moore-style DFAs and NFAs with per-state outputs directly in the browser.
 
@@ -9,14 +11,14 @@ An interactive SVG-based finite state machine editor. Draw Moore-style DFAs and 
 ## Installation
 
 ```bash
-npm install fsm-builder
+npm install @zojize/fsm-builder
 ```
 
 ## Quick start
 
 ```ts
-import { createFSMBuilder } from 'fsm-builder'
-import 'fsm-builder/style.css'
+import { createFSMBuilder } from '@zojize/fsm-builder'
+import '@zojize/fsm-builder/style.css'
 
 const api = createFSMBuilder({
   container: '#my-container',
@@ -112,7 +114,7 @@ interface FSMTransition {
 Pass a `validate` config to enable inline label validation:
 
 ```ts
-import { createFSMBuilder, validateBooleanExpression } from 'fsm-builder'
+import { createFSMBuilder, validateBooleanExpression } from '@zojize/fsm-builder'
 
 createFSMBuilder({
   container: '#editor',
@@ -138,8 +140,8 @@ The `validate` callback receives the label string, the current `FSMState`, and t
 ## Boolean expression utilities
 
 ```ts
-import type { BooleanExpression } from 'fsm-builder'
-import { evaluateBooleanExpression, parseBooleanExpression, validateBooleanExpression } from 'fsm-builder'
+import type { BooleanExpression } from '@zojize/fsm-builder'
+import { evaluateBooleanExpression, parseBooleanExpression, validateBooleanExpression } from '@zojize/fsm-builder'
 ```
 
 ### `parseBooleanExpression(input, options?)`
@@ -238,8 +240,8 @@ createFSMBuilder({ container: '#editor', initialState: saved })
 
 ```vue
 <script setup lang="ts">
-import type { FSMState } from 'fsm-builder'
-import { createFSMBuilder, validateBooleanExpression } from 'fsm-builder'
+import type { FSMState } from '@zojize/fsm-builder'
+import { createFSMBuilder, validateBooleanExpression } from '@zojize/fsm-builder'
 
 const state = defineModel<FSMState>()
 

@@ -7,8 +7,8 @@
     "moduleResolution": "bundler",
     "paths": {
       "~/*": ["./src/*"],
-      "fsm-builder": ["../src/index.ts"],
-      "fsm-builder/*": ["../src/*"]
+      "@zojize/fsm-builder": ["../src/index.ts"],
+      "@zojize/fsm-builder/*": ["../src/*"]
     },
     "resolveJsonModule": true,
     "types": [

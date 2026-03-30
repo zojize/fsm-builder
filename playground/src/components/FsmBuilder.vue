@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { BooleanExpression, FSMState } from 'fsm-builder'
-import { createFSMBuilder, evaluateBooleanExpression, parseBooleanExpression, validateBooleanExpression } from 'fsm-builder'
+import type { BooleanExpression, FSMState } from '@zojize/fsm-builder'
+import { createFSMBuilder, evaluateBooleanExpression, parseBooleanExpression, validateBooleanExpression } from '@zojize/fsm-builder'
 import Toastify from 'toastify-js'
 
 const {
