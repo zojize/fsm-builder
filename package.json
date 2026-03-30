@@ -1,52 +1,30 @@
 {
+  "name": "fsm-builder-monorepo",
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@10.16.1",
+  "workspaces": [
+    "src",
+    "playground"
+  ],
   "scripts": {
-    "build": "vite build",
-    "dev": "vite --port 3333 --open",
+    "build": "bun run --filter='*' build",
+    "build:lib": "bun run --cwd src build",
+    "build:playground": "bun run --cwd playground build",
+    "dev": "bun run --cwd playground dev",
     "lint": "eslint .",
-    "typecheck": "vue-tsc",
-    "preview": "vite preview",
+    "typecheck": "bun run --filter='*' typecheck",
     "up": "taze major -I",
-    "postinstall": "npx simple-git-hooks"
-  },
-  "dependencies": {
-    "@vueuse/core": "catalog:frontend",
-    "lz-string": "catalog:frontend",
-    "toastify-js": "catalog:frontend",
-    "vue": "catalog:frontend"
+    "postinstall": "lefthook install"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "catalog:dev",
-    "@iconify-json/carbon": "catalog:build",
-    "@iconify-json/mdi": "catalog:build",
-    "@types/node": "catalog:dev",
-    "@types/toastify-js": "catalog:dev",
-    "@unocss/eslint-plugin": "catalog:dev",
-    "@vitejs/plugin-vue": "catalog:build",
-    "@vue-macros/volar": "catalog:dev",
-    "eslint": "catalog:dev",
-    "eslint-plugin-format": "catalog:dev",
-    "lint-staged": "catalog:dev",
-    "peggy": "catalog:build",
-    "simple-git-hooks": "catalog:dev",
-    "taze": "catalog:dev",
-    "typescript": "catalog:dev",
-    "unocss": "catalog:build",
-    "unplugin-auto-import": "catalog:build",
-    "unplugin-vue-components": "catalog:build",
-    "unplugin-vue-macros": "catalog:build",
-    "vite": "catalog:build",
-    "vite-plugin-peggy-loader": "catalog:build",
-    "vue-tsc": "catalog:dev"
-  },
-  "resolutions": {
-    "unplugin": "catalog:build",
-    "vite": "catalog:build"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged"
+    "@antfu/eslint-config": "^7.7.3",
+    "@types/node": "^25.5.0",
+    "eslint": "^10.1.0",
+    "eslint-plugin-format": "^2.0.1",
+    "lefthook": "^2.1.4",
+    "lint-staged": "^16.4.0",
+    "taze": "^19.10.0",
+    "typescript": "^6.0.2"
   },
   "lint-staged": {
     "*": "eslint --fix"

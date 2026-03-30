@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { FSMState } from '~/utils/fsm'
+import type { BooleanExpression, FSMState } from 'fsm-builder'
+import { createFSMBuilder, evaluateBooleanExpression, parseBooleanExpression, validateBooleanExpression } from 'fsm-builder'
 import Toastify from 'toastify-js'
-import * as booleanParser from '~/utils/booleanParser.pegjs'
-import { createFSMBuilder } from '~/utils/fsm'
 
 const {
   variables = 'ab',
@@ -15,26 +14,12 @@ const {
 const state = defineModel<FSMState>()
 const inputs = defineModel<Record<string, string>>('inputs', { required: true })
 
-const defaultAlphabet = 'abcdefghijklmnopqrstuvwxyz'
-function validateBooleanExpression(
-  input: string,
-  { alphabet = defaultAlphabet }: { alphabet?: string } = { alphabet: defaultAlphabet },
-): boolean | string {
-  try {
-    booleanParser.parse(input, { alphabet })
-    return true
-  }
-  catch (e) {
-    return (e as any)?.message ?? `Unknown error while parsing: ${e}`
-  }
-}
-
 const container = useId()
 onMounted(() => {
   createFSMBuilder({
     container: `#${container}`,
     debug: true,
-    initialState: state.value ?? { nodes: {} },
+    initialState: toRaw(state.value) ?? { nodes: {} },
     onChange: (newState) => {
       state.value = newState
     },
@@ -45,7 +30,7 @@ onMounted(() => {
           pattern: `^[${variables}01\\(\\)'+]*$`,
         },
         validate(input) {
-          return validateBooleanExpression(input)
+          return validateBooleanExpression(input, { alphabet: variables })
         },
       },
     },
@@ -61,26 +46,6 @@ onBeforeUnmount(() => {
   }
 })
 
-function evaluateBooleanExpression(
-  expr: booleanParser.Expression,
-  context: Record<string, boolean>,
-): boolean {
-  switch (expr.type) {
-    case 'add':
-      return evaluateBooleanExpression(expr.left, context) || evaluateBooleanExpression(expr.right, context)
-    case 'mul':
-      return evaluateBooleanExpression(expr.left, context) && evaluateBooleanExpression(expr.right, context)
-    case 'not':
-      return !evaluateBooleanExpression(expr.operand, context)
-    case 'var':
-      return !!context[expr.symbol]
-    case 'true':
-      return true
-    case 'false':
-      return false
-  }
-}
-
 const currentNode = ref<string | undefined>(undefined)
 
 function step() {
@@ -91,7 +56,7 @@ function step() {
     const transitions = state.value?.nodes[currentNode.value].transitions ?? []
     const targets: string[] = []
     for (const transition of transitions) {
-      const expr = booleanParser.parse(transition.label, { alphabet: variables })
+      const expr: BooleanExpression = parseBooleanExpression(transition.label, { alphabet: variables })
       const context: Record<string, boolean> = {}
       for (const v of variables) {
         const input = inputs.value[v][0]

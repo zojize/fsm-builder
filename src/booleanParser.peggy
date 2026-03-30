@@ -7,22 +7,22 @@ Expression
   = Add
 
 Add
-	= head:Mult tail:("+" right:Mult { return right })* {
-			return tail.reduce((left, right) => ({ type: "add", left, right }), head)
-		}
+  = head:Mult tail:("+" right:Mult { return right })* {
+      return tail.reduce((left, right) => ({ type: "add", left, right }), head)
+    }
 
 Mult
-	= head:Not tail:(("*"/"") right:Not { return right })* {
-			return tail.reduce((left, right) => ({ type: "multiply", left, right }), head)
-		}
+  = head:Not tail:(("*"/"") right:Not { return right })* {
+      return tail.reduce((left, right) => ({ type: "multiply", left, right }), head)
+    }
 
 Not
-	= base:Primary ap:("'")* {
+  = base:Primary ap:("'")* {
       return ap.reduce((operand, _) => ({ type: "not", operand }), base)
-		}
+    }
 
 Primary
-	= Var
+  = Var
   / True
   / False
   / Paren
@@ -31,7 +31,7 @@ Paren "parenthesized expression"
   = "(" e:Expression ")" { return e }
 
 Var "variable"
-	= symbol:[a-zA-Z] {
+  = symbol:[a-zA-Z] {
       if (!isAllowedVar(symbol[0])) {
         error(`Variable ${symbol[0]} not in allowed alphabet`)
       } else {

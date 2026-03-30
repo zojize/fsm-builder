@@ -1,7 +1,31 @@
+details.instructions {
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  padding: 0.5em 0.5em 0;
+  margin-bottom: 15px;
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.instructions summary {
+  font-weight: bold;
+  margin: -0.5em -0.5em 0;
+  padding: 0.5em;
+  outline: none;
+}
+
+details.instructions[open] {
+  padding: 0.5em;
+}
+
+details.instructions[open] summary {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  margin-bottom: 0.5em;
+}
+
 /* FSM Builder styles */
 
 .fsm-builder {
   position: relative;
+  border: 1px solid #d1d5db; /* gray-300 */
 }
 
 /* Visually prevent text selection on the canvas except for focused input fields */
@@ -20,7 +44,22 @@
 
 .fsm-builder .fsm-node:hover .fsm-node-circle {
   stroke: #2563eb; /* blue-600 */
+  fill: rgba(37, 99, 235, 0.15);
+}
+
+/* Grab cursor on hover — suppressed while panning, in move mode, or dragging a node */
+.fsm-builder:not(.panning):not([data-edit-mode='move']) .fsm-node:not(.dragging):hover .fsm-node-circle {
   cursor: grab;
+}
+
+/* Node being dragged: grabbing */
+.fsm-builder .fsm-node.dragging .fsm-node-circle {
+  cursor: grabbing;
+}
+
+.fsm-builder .fsm-node-circle.selected {
+  stroke: #2563eb; /* blue-600 */
+  stroke-width: 2.4;
   fill: rgba(37, 99, 235, 0.15);
 }
 
@@ -64,6 +103,15 @@
 }
 
 .fsm-builder .fsm-edge.dragging .fsm-edge-arrow {
+  fill: #2563eb;
+}
+
+.fsm-builder .fsm-edge.selected .fsm-edge-path {
+  stroke: #2563eb;
+  stroke-width: 2.8;
+}
+
+.fsm-builder .fsm-edge.selected .fsm-edge-arrow {
   fill: #2563eb;
 }
 
@@ -173,8 +221,8 @@
 }
 
 .fsm-validation ul .item .icon {
-  width: 16px;
-  height: 16px;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .fsm-validation ul .item .msg {
@@ -188,11 +236,10 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 48px;
+  width: 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
   padding: 8px 6px;
   z-index: 10;
   pointer-events: auto;
@@ -200,11 +247,11 @@
 }
 
 .fsm-builder .fsm-sidebar .fsm-sidebar-toggle {
-  width: 34px;
+  width: 66px;
   height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 8px 8px 0 0;
   border: 1px solid #e5e7eb;
   background: #ffffff;
   cursor: pointer;
@@ -227,24 +274,31 @@
   transform: translateY(1px);
 }
 
-.fsm-builder .fsm-sidebar .fsm-sidebar-toggle img {
-  width: 18px;
-  height: 18px;
+.fsm-builder .fsm-sidebar .fsm-sidebar-toggle span {
+  font-size: 18px;
+  line-height: 1;
   transition: transform 160ms ease;
 }
 
-.fsm-builder .fsm-sidebar.collapsed .fsm-sidebar-toggle img {
+.fsm-builder .fsm-sidebar.collapsed .fsm-sidebar-toggle {
+  border-radius: 8px;
+}
+
+.fsm-builder .fsm-sidebar.collapsed .fsm-sidebar-toggle span {
   transform: rotate(-180deg);
 }
 
 .fsm-builder .fsm-sidebar .fsm-tool-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   transform-origin: top;
   transition: transform 160ms ease;
   user-select: none;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
 }
 
 .fsm-builder .fsm-sidebar.collapsed .fsm-tool-list {
@@ -253,26 +307,36 @@
 }
 
 .fsm-builder .fsm-sidebar .fsm-tool-btn {
-  width: 34px;
-  height: 34px;
+  width: 33px;
+  height: 33px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border-radius: 0;
+  border: none;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
   cursor: pointer;
   padding: 0;
   outline: none;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
   transition:
     background 140ms ease,
-    border-color 140ms ease,
     transform 80ms ease;
+}
+
+/* Remove right border on even (right-column) buttons */
+.fsm-builder .fsm-sidebar .fsm-tool-btn:nth-child(even) {
+  border-right: none;
+}
+
+/* Remove bottom border on last row */
+.fsm-builder .fsm-sidebar .fsm-tool-btn:nth-last-child(1),
+.fsm-builder .fsm-sidebar .fsm-tool-btn:nth-last-child(2):nth-child(odd) {
+  border-bottom: none;
 }
 
 .fsm-builder .fsm-sidebar .fsm-tool-btn:hover {
   background: #f9fafb;
-  border-color: #d1d5db;
 }
 
 .fsm-builder .fsm-sidebar .fsm-tool-btn:active {
@@ -280,18 +344,30 @@
   transform: scale(0.98);
 }
 
-.fsm-builder .fsm-sidebar .fsm-tool-btn img {
-  width: 18px;
-  height: 18px;
+.fsm-builder .fsm-sidebar .fsm-tool-btn span {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.fsm-builder .fsm-sidebar .fsm-tool-btn-danger span {
+  color: #ef4444;
 }
 
 .fsm-builder[data-edit-mode='default'] .fsm-tool-btn[data-mode='default'],
+.fsm-builder[data-edit-mode='move'] .fsm-tool-btn[data-mode='move'],
 .fsm-builder[data-edit-mode='link'] .fsm-tool-btn[data-mode='link'],
 .fsm-builder[data-edit-mode='add'] .fsm-tool-btn[data-mode='add'],
-.fsm-builder[data-edit-mode='start'] .fsm-tool-btn[data-mode='start'],
 .fsm-builder[data-edit-mode='remove'] .fsm-tool-btn[data-mode='remove'] {
   background: #e5e7eb; /* gray-200 */
-  border-color: #9ca3af; /* gray-400 */
+}
+
+/* Box selector (drag on empty canvas to multi-select nodes) */
+.fsm-builder .fsm-box-selector {
+  fill: rgba(37, 99, 235, 0.06);
+  stroke: rgba(37, 99, 235, 0.4);
+  stroke-width: 1;
+  stroke-dasharray: 4 2;
+  pointer-events: none;
 }
 
 .fsm-builder .fsm-add-preview {
@@ -322,7 +398,18 @@
   cursor: crosshair;
 }
 
-/* Start-state mode: pointer cursor on nodes */
-.fsm-builder[data-edit-mode='start'] .fsm-node-circle {
-  cursor: pointer !important;
+/* Move mode: move cursor for all SVG content */
+.fsm-builder[data-edit-mode='move'] svg {
+  cursor: move;
+}
+
+.fsm-builder[data-edit-mode='move'] .fsm-node:hover .fsm-node-circle,
+.fsm-builder[data-edit-mode='move'] .fsm-edge-hit {
+  cursor: move;
+}
+
+/* Move mode while panning: attribute selector raises specificity above .panning */
+.fsm-builder[data-edit-mode='move'].panning svg,
+.fsm-builder[data-edit-mode='move'].panning svg * {
+  cursor: move;
 }

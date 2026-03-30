@@ -179,6 +179,8 @@ export interface ParseOptions<T extends StartRuleNames = 'Expression'> {
   readonly grammarSource?: GrammarSource
   readonly startRule?: T
   readonly tracer?: ParserTracer
+  /** Alphabet of allowed variable names (e.g. 'ab' for variables a and b). */
+  readonly alphabet?: string
 
   // Internal use only:
   readonly peg$library?: boolean
@@ -192,44 +194,17 @@ export interface ParseOptions<T extends StartRuleNames = 'Expression'> {
   [key: string]: unknown
 }
 
+// AST node types produced by the boolean expression parser
+export interface Add { type: 'add', left: Expression, right: Expression }
+export interface Mul { type: 'mul', left: Expression, right: Expression }
+export interface Not { type: 'not', operand: Expression }
+export interface Var { type: 'var', symbol: string }
+export interface True { type: 'true' }
+export interface False { type: 'false' }
+export type Expression = Add | Mul | Not | Var | True | False
+
 export declare const StartRules: StartRuleNames[]
 export declare const parse: typeof ParseFunction
-
-interface Add {
-  type: 'add'
-  left: Expression
-  right: Expression
-}
-
-interface Mul {
-  type: 'mul'
-  left: Expression
-  right: Expression
-}
-
-interface Not {
-  type: 'not'
-  operand: Expression
-}
-
-interface Var {
-  type: 'var'
-  symbol: string
-}
-
-interface True {
-  type: 'true'
-}
-
-interface False {
-  type: 'false'
-}
-
-type Expression = Add | Mul | Not | Var | True | False
-
-interface ParseOptions<T extends StartRuleNames> {
-  alphabet?: string
-}
 
 // Overload of ParseFunction for each allowedStartRule
 
@@ -241,4 +216,4 @@ declare function ParseFunction<Options extends ParseOptions<'Expression'>>(
 declare function ParseFunction<Options extends ParseOptions<StartRuleNames>>(
   input: string,
   options?: Options,
-): any
+): Expression

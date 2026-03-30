@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { decompressFromEncodedURIComponent as decode, compressToEncodedURIComponent as encode } from 'lz-string'
 import Toastify from 'toastify-js'
-import { fsmStateToBackwardsCompatible, logicOnlyFsm, logicOnlyLegacyFsm } from './utils/fsmHelpers'
 
 const fsmState = useLocalStorage('fsmState', { nodes: {} })
 const variables = useLocalStorage('variables', 'ab')
@@ -78,25 +77,7 @@ function forceUpdate() {
   updateKey.value += 1
 }
 
-const legacy = ref(false)
-const logicOnly = ref(false)
-
-const textareaContent = computed(() => {
-  let data: any
-  if (logicOnly.value) {
-    if (legacy.value)
-      data = logicOnlyLegacyFsm(fsmStateToBackwardsCompatible(fsmState.value))
-    else
-      data = logicOnlyFsm(fsmState.value)
-  }
-  else if (legacy.value) {
-    data = fsmStateToBackwardsCompatible(fsmState.value)
-  }
-  else {
-    data = fsmState.value
-  }
-  return JSON.stringify(data, null, 2)
-})
+const textareaContent = computed(() => JSON.stringify(fsmState.value, null, 2))
 
 function copyTextarea() {
   copy(textareaContent.value)
@@ -153,20 +134,9 @@ function textareaOnInput(event: Event) {
         @input="onInput($event as InputEvent, variable)"
       >
       <div class="flex-1 h-full w-full relative">
-        <div class="p-3 border border-gray-200 rounded-lg bg-white/90 flex flex-col gap-2 shadow-sm right-2 top-2 absolute backdrop-blur-sm">
-          <label class="text-sm text-gray-700 flex gap-2 cursor-pointer transition-colors items-center hover:text-gray-900">
-            <input v-model="legacy" type="checkbox" class="text-teal-600 border-gray-300 rounded">
-            <span>Legacy</span>
-          </label>
-          <label class="text-sm text-gray-700 flex gap-2 cursor-pointer transition-colors items-center hover:text-gray-900">
-            <input v-model="logicOnly" type="checkbox" class="text-teal-600 border-gray-300 rounded">
-            <span>Logic Only</span>
-          </label>
-        </div>
         <button class="i-carbon-copy icon-btn bottom-2 right-2 absolute" @click="copyTextarea" />
         <textarea
           :value="textareaContent"
-          :disabled="logicOnly || legacy"
           class="text-sm font-mono border-0 bg-transparent h-full w-full resize-none whitespace-pre overflow-scroll focus:outline-none"
           @input="textareaOnInput"
         />

@@ -1,0 +1,34 @@
+{
+  "name": "fsm-builder-playground",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite --port 3333 --open",
+    "typecheck": "vue-tsc",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vueuse/core": "^14.2.1",
+    "fsm-builder": "workspace:*",
+    "lz-string": "^1.5.0",
+    "toastify-js": "^1.12.0",
+    "vue": "^3.5.31"
+  },
+  "devDependencies": {
+    "@iconify-json/carbon": "^1.2.20",
+    "@iconify-json/mdi": "^1.2.3",
+    "@types/node": "^25.5.0",
+    "@types/toastify-js": "^1.12.4",
+    "@unocss/eslint-plugin": "^66.6.7",
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@vue-macros/volar": "^3.1.2",
+    "typescript": "^6.0.2",
+    "unocss": "^66.6.7",
+    "unplugin-auto-import": "^21.0.0",
+    "unplugin-vue-components": "^32.0.0",
+    "unplugin-vue-macros": "^2.14.5",
+    "vite": "^8.0.3",
+    "vue-tsc": "^3.2.6"
+  }
+}
