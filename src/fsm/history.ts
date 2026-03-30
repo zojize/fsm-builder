@@ -63,7 +63,7 @@ export function createHistory(
       return
     redoStack.push(undoStack.pop()!)
     isRestoring = true
-    loadState(structuredClone(undoStack.at(-1)))
+    loadState(structuredClone(undoStack.at(-1)!))
     isRestoring = false
   }
 

@@ -63,7 +63,7 @@ export function getFontSize(
     if (textLength <= len)
       return breakpoints[len]
   }
-  return breakpoints[lengths.at(-1)] ?? defaultSize
+  return breakpoints[lengths.at(-1)!] ?? defaultSize
 }
 
 /** Stop `pointerdown`, `mousedown`, `click`, and `dblclick` from bubbling out of `el`. */
