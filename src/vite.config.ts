@@ -30,6 +30,6 @@ export default defineConfig({
         }),
       ],
     }),
-    dts({ rollupTypes: true, exclude: ['vite.config.ts'] }),
+    dts({ exclude: ['vite.config.ts'] }),
   ],
 })
