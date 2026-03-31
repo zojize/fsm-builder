@@ -8,6 +8,7 @@ import { createHistory } from './fsm/history'
 import { createNewNode, createStartMarker, findNodeAtPt, focusInnerNodeInput, removeNode } from './fsm/nodes'
 import { clearSelection, emitSelectionChanged, syncNodeSelection } from './fsm/selection'
 import { createSidebar } from './fsm/sidebar'
+import { createSimulation } from './fsm/simulation'
 import { runValidation } from './fsm/validation'
 
 export type { FSMBuilderAPI, FSMEventHandler, FSMEventMap } from './fsm/events'
@@ -31,9 +32,8 @@ const defaultFSMOptions = {
   readonly: false,
   debug: false,
   scale: 1,
+  simulation: false,
 } satisfies FSMOptions
-
-// TODO: simulation mode
 
 /**
  * Initialise an FSM builder in the given container.
@@ -56,6 +56,7 @@ export function createFSMBuilder({
   sidebar = defaultFSMOptions.sidebar,
   fontSizeBreakpoints = defaultFSMOptions.fontSizeBreakpoints,
   scale = defaultFSMOptions.scale,
+  simulation = defaultFSMOptions.simulation,
   maxHistory,
   onChange,
 }: FSMOptions = defaultFSMOptions): FSMBuilderAPI {
@@ -138,6 +139,7 @@ export function createFSMBuilder({
       sidebar,
       fontSizeBreakpoints,
       scale,
+      simulation,
       maxHistory,
       onChange,
     },
@@ -165,6 +167,7 @@ export function createFSMBuilder({
     tryOnChange,
     suppressHistoryCapture: false,
     history: null,
+    simulation: null,
     defaultEdgeFontSize: '20px',
     defaultInnerNodeFontSize: '23px',
     defaultOuterNodeFontSize: '25px',
@@ -198,6 +201,11 @@ export function createFSMBuilder({
 
   if (!readonly && (debug || sidebar))
     createSidebar(fsmContainer, ctx, id => removeNode(ctx, id))
+
+  if (simulation) {
+    ctx.simulation = createSimulation(ctx)
+    ctx.destroyCallbacks.push(() => ctx.simulation?.destroy())
+  }
 
   function loadState(snapshot: FSMState): void {
     clearSelection(ctx)

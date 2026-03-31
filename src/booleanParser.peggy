@@ -13,7 +13,7 @@ Add
 
 Mult
   = head:Not tail:(("*"/"") right:Not { return right })* {
-      return tail.reduce((left, right) => ({ type: "multiply", left, right }), head)
+      return tail.reduce((left, right) => ({ type: "mul", left, right }), head)
     }
 
 Not

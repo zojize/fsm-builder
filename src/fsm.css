@@ -413,3 +413,104 @@ details.instructions[open] summary {
 .fsm-builder[data-edit-mode='move'].panning svg * {
   cursor: move;
 }
+
+/* Simulation panel */
+
+.fsm-builder .fsm-sim-panel {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 15;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: var(--fsm-font-family);
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  user-select: none;
+}
+
+.fsm-builder .fsm-sim-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  color: #374151;
+}
+
+.fsm-builder .fsm-sim-close {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0;
+  color: #6b7280;
+}
+
+.fsm-builder .fsm-sim-close:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.fsm-builder .fsm-sim-var-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fsm-builder .fsm-sim-var-label {
+  font-weight: 500;
+  min-width: 14px;
+  color: #374151;
+}
+
+.fsm-builder .fsm-sim-var-input {
+  width: 80px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-family: var(--fsm-font-family);
+  font-size: 13px;
+  outline: none;
+}
+
+.fsm-builder .fsm-sim-var-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.fsm-builder .fsm-sim-error {
+  background: #fef2f2;
+  border: 1px solid #f87171;
+  color: #7f1d1d;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  animation: fsm-sim-error-fade 3s ease forwards;
+}
+
+@keyframes fsm-sim-error-fade {
+  0%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.fsm-builder .fsm-node-circle.fsm-sim-active {
+  stroke: #115e59 !important;
+  stroke-width: 2.4;
+  fill: rgba(20, 184, 166, 0.35) !important;
+}

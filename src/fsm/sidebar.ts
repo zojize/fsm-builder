@@ -64,6 +64,27 @@ export function createSidebar(container: HTMLElement, ctx: FSMContext, removeNod
     list.appendChild(makeBtn(label, iconName, mode, container))
   }
 
+  // Simulation buttons
+  if (ctx.options.simulation) {
+    const stepBtn = makeActionBtn('Step', 'i-bi-skip-forward-fill')
+    stepBtn.setAttribute('data-action', 'sim-step')
+    stepBtn.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      ctx.simulation?.step()
+    })
+    list.appendChild(stepBtn)
+
+    const replayBtn = makeActionBtn('Replay', 'i-bi-arrow-repeat')
+    replayBtn.setAttribute('data-action', 'sim-replay')
+    replayBtn.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      ctx.simulation?.reset()
+    })
+    list.appendChild(replayBtn)
+  }
+
   // Set start – action button (not a mode toggle)
   const startBtn = makeActionBtn('Toggle start state', 'i-bi-caret-right-square')
   startBtn.setAttribute('data-action', 'set-start')

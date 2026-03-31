@@ -34,6 +34,11 @@ export interface FSMOptions {
   }
   /** When true, validation runs automatically on every change. Default: false. */
   autoValidate?: boolean
+  /** Enable built-in FSM simulation. Pass `true` for auto-detected variables or an options object. */
+  simulation?: boolean | {
+    /** Variable alphabet, e.g. `"ab"`. If omitted, auto-detected from edge labels. */
+    variables?: string
+  }
 }
 
 /** A transition (directed edge) between two FSM states. */

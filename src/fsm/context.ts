@@ -1,5 +1,6 @@
 import type { FSMEventEmitter } from './events'
 import type { FSMHistory } from './history'
+import type { SimulationController } from './simulation'
 import type { EdgeId, FSMNode, FSMOptions, FSMState, FSMTransition, NodeId } from './types'
 
 /**
@@ -65,6 +66,9 @@ export interface FSMContext {
 
   // Undo/redo
   history: FSMHistory | null
+
+  // Simulation
+  simulation: SimulationController | null
 
   // Default font sizes
   readonly defaultEdgeFontSize: string
