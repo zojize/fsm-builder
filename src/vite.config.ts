@@ -1,5 +1,5 @@
 import path from 'node:path'
-import { presetIcons } from 'unocss'
+import { presetIcons, presetWind4 } from 'unocss'
 import UnoCSS from 'unocss/vite'
 import { defineConfig } from 'vite'
 import peggyPlugin from './vite-plugin-peggy'
@@ -24,6 +24,7 @@ export default defineConfig({
         },
       },
       presets: [
+        presetWind4({ preflights: { reset: false } }),
         presetIcons({
           collections: {
             bi: () => import('@iconify-json/bi/icons.json').then(i => i.default),

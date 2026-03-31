@@ -160,7 +160,7 @@ export function createSimulation(ctx: FSMContext): SimulationController {
     let errorEl = panel.querySelector<HTMLDivElement>('.fsm-sim-error')
     if (!errorEl) {
       errorEl = document.createElement('div')
-      errorEl.className = 'fsm-sim-error'
+      errorEl.className = 'fsm-sim-error bg-red-50 border border-red-400 text-red-900 px-2.5 py-1.5 rounded-md text-xs'
       panel.appendChild(errorEl)
     }
     errorEl.textContent = msg
@@ -172,18 +172,18 @@ export function createSimulation(ctx: FSMContext): SimulationController {
 
   function createPanel(variables: string): HTMLDivElement {
     const el = document.createElement('div')
-    el.className = 'fsm-sim-panel'
+    el.className = 'absolute top-2 right-2 z-15 bg-white border border-gray-200 rounded-lg px-3 py-2.5 font-[--fsm-font-family] text-[13px] flex flex-col gap-1.5 shadow-sm select-none'
 
     // Header
     const header = document.createElement('div')
-    header.className = 'fsm-sim-panel-header'
+    header.className = 'flex justify-between items-center gap-2 font-semibold text-xs text-gray-700'
     const title = document.createElement('span')
     title.textContent = 'Simulation'
     header.appendChild(title)
 
     const closeBtn = document.createElement('button')
     closeBtn.type = 'button'
-    closeBtn.className = 'fsm-sim-close'
+    closeBtn.className = 'size-5 grid place-items-center border-none bg-transparent cursor-pointer rounded-sm p-0 text-gray-500 hover:bg-gray-100 hover:text-gray-900'
     closeBtn.setAttribute('aria-label', 'Close simulation')
     closeBtn.title = 'Close simulation'
     closeBtn.appendChild(createIconElement('i-bi-x-lg'))
@@ -195,16 +195,16 @@ export function createSimulation(ctx: FSMContext): SimulationController {
     variableInputEls = {}
     for (const v of variables) {
       const row = document.createElement('div')
-      row.className = 'fsm-sim-var-row'
+      row.className = 'flex items-center gap-1.5'
 
       const label = document.createElement('span')
-      label.className = 'fsm-sim-var-label'
+      label.className = 'font-medium min-w-3.5 text-gray-700'
       label.textContent = v
       row.appendChild(label)
 
       const input = document.createElement('input')
       input.type = 'text'
-      input.className = 'fsm-sim-var-input'
+      input.className = 'w-20 border border-gray-300 rounded-sm px-1.5 py-0.75 font-[--fsm-font-family] text-[13px] outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15'
       input.placeholder = `${v} input`
       input.addEventListener('keydown', (e) => {
         if (e.key !== '0' && e.key !== '1' && e.key !== 'Backspace' && e.key !== 'Delete'
