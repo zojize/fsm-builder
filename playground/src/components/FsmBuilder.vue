@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { BooleanExpression, FSMState } from '@zojize/fsm-builder'
-import { createFSMBuilder, evaluateBooleanExpression, parseBooleanExpression, validateBooleanExpression } from '@zojize/fsm-builder'
-import Toastify from 'toastify-js'
+import type { FSMState } from '@zojize/fsm-builder'
+import { createFSMBuilder, validateBooleanExpression } from '@zojize/fsm-builder'
 
 const {
   variables = 'ab',
@@ -12,7 +11,6 @@ const {
 }>()
 
 const state = defineModel<FSMState>()
-const inputs = defineModel<Record<string, string>>('inputs', { required: true })
 
 const container = useId()
 onMounted(() => {
@@ -23,6 +21,7 @@ onMounted(() => {
     onChange: (newState) => {
       state.value = newState
     },
+    simulation: { variables },
     validate: {
       container: validationContainer,
       edge: {
@@ -45,80 +44,8 @@ onBeforeUnmount(() => {
     el.innerHTML = ''
   }
 })
-
-const currentNode = ref<string | undefined>(undefined)
-
-function step() {
-  if (!currentNode.value) {
-    currentNode.value = state.value?.start
-  }
-  else {
-    const transitions = state.value?.nodes[currentNode.value].transitions ?? []
-    const targets: string[] = []
-    for (const transition of transitions) {
-      const expr: BooleanExpression = parseBooleanExpression(transition.label, { alphabet: variables })
-      const context: Record<string, boolean> = {}
-      for (const v of variables) {
-        const input = inputs.value[v][0]
-        if (!input) {
-          Toastify({
-            text: `No more input for variable ${v}`,
-            backgroundColor: 'linear-gradient(to right, #ff5f6d, #ffc371)',
-          }).showToast()
-          return
-        }
-        context[v] = input === '1'
-      }
-      if (evaluateBooleanExpression(expr, context)) {
-        targets.push(transition.to)
-      }
-    }
-    if (targets.length === 1) {
-      currentNode.value = targets[0]
-      for (const v of variables) {
-        inputs.value[v] = inputs.value[v].slice(1)
-      }
-    }
-    else if (targets.length > 1) {
-      Toastify({
-        text: 'Nondeterministic transition, multiple targets match condition',
-        backgroundColor: 'linear-gradient(to right, #ff5f6d, #ffc371)',
-      }).showToast()
-    }
-    else {
-      Toastify({
-        text: 'No valid transition found',
-        backgroundColor: 'linear-gradient(to right, #ff5f6d, #ffc371)',
-      }).showToast()
-    }
-  }
-}
-
-const containerEl = useTemplateRef('containerEl')
-function styleNode(circle: SVGCircleElement | null) {
-  if (circle) {
-    circle.classList.add('!stroke-teal-800', '!fill-teal-500/50')
-  }
-}
-function unstyleNode(circle: SVGCircleElement | null) {
-  if (circle) {
-    circle.classList.remove('!stroke-teal-800', '!fill-teal-500/50')
-  }
-}
-const currentNodeCircle = computed(() => {
-  return containerEl.value?.querySelector<SVGCircleElement>(`.fsm-nodes g.fsm-node[data-node-id="${currentNode.value}"] circle`) ?? null
-})
-watch(currentNodeCircle, (newCircle, oldCircle) => {
-  unstyleNode(oldCircle)
-  styleNode(newCircle)
-})
 </script>
 
 <template>
-  <div :id="container" ref="containerEl" class="border-2 border-gray-300 border-dashed flex-[1.5] self-stretch relative">
-    <div class="flex flex-row items-center right-2 top-2 absolute">
-      <button class="i-mdi-step-forward icon-btn" title="Step Forward" @click="step" />
-      <button class="i-mdi-refresh icon-btn icon-btn" title="Reset" @click="currentNode = undefined" />
-    </div>
-  </div>
+  <div :id="container" class="border-2 border-gray-300 border-dashed flex-[1.5] self-stretch relative" />
 </template>
