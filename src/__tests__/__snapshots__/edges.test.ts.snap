@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`computeNonSelfEdgeGeom > snapshot straight edge 1`] = `"M 0 0 C 100 0 100 0 200 0"`;
+
+exports[`computeSelfEdgeGeom > snapshot default self-loop geometry 1`] = `"M 120.4 78.00363666421197 A 24 24 0 1 1 120.4 121.99636333578803"`;
