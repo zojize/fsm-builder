@@ -1,4 +1,4 @@
-import * as booleanParser from './booleanParser'
+import * as booleanParser from './booleanParser.peggy'
 
 const defaultAlphabet = 'abcdefghijklmnopqrstuvwxyz'
 

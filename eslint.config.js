@@ -5,8 +5,6 @@ export default antfu(
     vue: true,
     unocss: true,
     formatters: true,
-    ignores: [
-      'src/booleanParser.js',
-    ],
+    ignores: [],
   },
 )

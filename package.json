@@ -23,6 +23,7 @@
     "eslint-plugin-format": "^2.0.1",
     "lefthook": "^2.1.4",
     "lint-staged": "^16.4.0",
+    "peggy": "^5.1.0",
     "taze": "^19.10.0",
     "typescript": "^6.0.2"
   },

@@ -6,6 +6,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import VueMacros from 'unplugin-vue-macros/vite'
 import { defineConfig } from 'vite'
+import peggyPlugin from '../src/vite-plugin-peggy'
 
 export default defineConfig({
   base: process.env.VITE_BASE || '/',
@@ -45,5 +46,6 @@ export default defineConfig({
     }),
 
     UnoCSS(),
+    peggyPlugin(),
   ],
 })

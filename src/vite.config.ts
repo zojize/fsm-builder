@@ -2,6 +2,7 @@ import path from 'node:path'
 import { presetIcons } from 'unocss'
 import UnoCSS from 'unocss/vite'
 import { defineConfig } from 'vite'
+import peggyPlugin from './vite-plugin-peggy'
 
 export default defineConfig({
   build: {
@@ -15,6 +16,7 @@ export default defineConfig({
     minify: false,
   },
   plugins: [
+    peggyPlugin(),
     UnoCSS({
       content: {
         pipeline: {
