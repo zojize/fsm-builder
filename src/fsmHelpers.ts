@@ -1,3 +1,4 @@
+import type { FSMState } from './fsm/types'
 import * as booleanParser from './booleanParser.peggy'
 
 const defaultAlphabet = 'abcdefghijklmnopqrstuvwxyz'
@@ -32,5 +33,21 @@ export function evaluateBooleanExpression(
       return true
     case 'false':
       return false
+  }
+}
+
+/** Strip positional data (x, y, radius, offset) from an FSM state, keeping only logical structure. */
+export function logicOnlyFsm(state: FSMState) {
+  return {
+    start: state.start,
+    nodes: Object.fromEntries(Object.entries(state.nodes)
+      .map(([id, node]) => [
+        id,
+        {
+          label: node.label,
+          innerLabel: node.innerLabel,
+          transitions: node.transitions.map(({ to, label }) => ({ to, label })),
+        },
+      ])),
   }
 }

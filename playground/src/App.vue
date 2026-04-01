@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { logicOnlyFsm } from '@zojize/fsm-builder'
 import { decompressFromEncodedURIComponent as decode, compressToEncodedURIComponent as encode } from 'lz-string'
 import Toastify from 'toastify-js'
 
@@ -47,7 +48,12 @@ function forceUpdate() {
   updateKey.value += 1
 }
 
-const textareaContent = computed(() => JSON.stringify(fsmState.value, null, 2))
+const logicOnly = ref(false)
+
+const textareaContent = computed(() => {
+  const data = logicOnly.value ? logicOnlyFsm(fsmState.value) : fsmState.value
+  return JSON.stringify(data, null, 2)
+})
 
 function copyTextarea() {
   copy(textareaContent.value)
@@ -85,18 +91,17 @@ function textareaOnInput(event: Event) {
   <main class="flex flex-1 flex-row gap-2 max-h-[calc(100vh-4rem)]">
     <FsmBuilder :key="`${validationContainer}${updateKey}`" v-model="fsmState" :validation-container :variables />
     <div class="px-2 flex flex-1 flex-col gap-2 h-full overflow-scroll">
-      <label class="text-sm text-gray-700 font-semibold mb-1 p-2 border border-gray-200 rounded-lg bg-gray-50 block">
-        Variables:
-        <input
-          v-model="variables"
-          placeholder="Variables (e.g. abcd)"
-          class="text-sm px-3 py-2 border border-gray-300 rounded-md w-full shadow-sm focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500"
-        >
-      </label>
       <div class="flex-1 h-full w-full relative">
-        <button class="i-carbon-copy icon-btn bottom-2 right-2 absolute" @click="copyTextarea" />
+        <div class="flex gap-3 right-2 top-2 absolute z-10">
+          <label class="text-sm text-gray-700 flex gap-1.5 cursor-pointer transition-colors items-center hover:text-gray-900">
+            <input v-model="logicOnly" type="checkbox" class="text-blue-600 border-gray-300 rounded">
+            <span>Logic Only</span>
+          </label>
+          <button class="i-carbon-copy icon-btn" @click="copyTextarea" />
+        </div>
         <textarea
           :value="textareaContent"
+          :disabled="logicOnly"
           class="text-sm font-mono border-0 bg-transparent h-full w-full resize-none whitespace-pre overflow-scroll focus:outline-none"
           @input="textareaOnInput"
         />

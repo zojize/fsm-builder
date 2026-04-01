@@ -55,14 +55,21 @@ export function createSimulation(ctx: FSMContext): SimulationController {
 
       const variables = getVariables()
       const context: Record<string, boolean> = {}
+      let missingInput = false
       for (const v of variables) {
-        const inputVal = variableInputEls[v]?.value ?? ''
+        const el = variableInputEls[v]
+        const inputVal = el?.value ?? ''
         if (inputVal.length === 0) {
-          showError(`No more input for variable ${v}`)
-          return
+          el?.classList.add('!border-red-400')
+          missingInput = true
         }
-        context[v] = inputVal[0] === '1'
+        else {
+          el?.classList.remove('!border-red-400')
+          context[v] = inputVal[0] === '1'
+        }
       }
+      if (missingInput)
+        return
 
       const targets: string[] = []
       for (const t of node.transitions) {
@@ -96,6 +103,8 @@ export function createSimulation(ctx: FSMContext): SimulationController {
     reset() {
       currentNodeId = undefined
       highlightNode(undefined)
+      for (const el of Object.values(variableInputEls))
+        el.classList.remove('!border-red-400')
     },
 
     exit() {

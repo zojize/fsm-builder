@@ -165,6 +165,35 @@ describe('createSimulation', () => {
     sim.destroy()
   })
 
+  it('shows red border on empty input instead of error message', () => {
+    const ctx = createMockCtx(makeFSM(), { variables: 'a' })
+    const sim = createSimulation(ctx)
+    sim.step() // go to start (q0)
+
+    // Don't set any input value — leave it empty
+    sim.step()
+
+    const input = ctx.fsmContainer.querySelector('input') as HTMLInputElement
+    expect(input.classList.contains('!border-red-400')).toBe(true)
+    // No error toast should appear for this case
+    const error = ctx.fsmContainer.querySelector('.fsm-sim-error')
+    expect(error).toBeNull()
+    sim.destroy()
+  })
+
+  it('reset clears red border', () => {
+    const ctx = createMockCtx(makeFSM(), { variables: 'a' })
+    const sim = createSimulation(ctx)
+    sim.step() // go to start
+    sim.step() // empty input → red border
+
+    sim.reset()
+
+    const input = ctx.fsmContainer.querySelector('input') as HTMLInputElement
+    expect(input.classList.contains('!border-red-400')).toBe(false)
+    sim.destroy()
+  })
+
   it('reset clears highlight', () => {
     const ctx = createMockCtx(makeFSM())
     const sim = createSimulation(ctx)

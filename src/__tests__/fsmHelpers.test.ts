@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parse as parseBooleanExpression } from '../booleanParser.peggy'
-import { evaluateBooleanExpression, validateBooleanExpression } from '../fsmHelpers'
+import { evaluateBooleanExpression, logicOnlyFsm, validateBooleanExpression } from '../fsmHelpers'
 
 describe('validateBooleanExpression', () => {
   it('accepts valid expressions', () => {
@@ -80,5 +80,61 @@ describe('evaluateBooleanExpression', () => {
     // (a+b)' should be NOT (a OR b)
     expect(evaluate('(a+b)\'', { a: false, b: false })).toBe(true)
     expect(evaluate('(a+b)\'', { a: true, b: false })).toBe(false)
+  })
+})
+
+describe('logicOnlyFsm', () => {
+  it('strips positional data from nodes and transitions', () => {
+    const result = logicOnlyFsm({
+      start: 'q0',
+      nodes: {
+        q0: {
+          label: 'q0',
+          innerLabel: '',
+          x: 100,
+          y: 200,
+          radius: 30,
+          transitions: [
+            { to: 'q1', label: 'a', offset: 15 },
+            { to: 'q0', label: 'b', offset: 0, rotation: 45 },
+          ],
+        },
+        q1: {
+          label: 'q1',
+          innerLabel: 'accept',
+          x: 300,
+          y: 200,
+          radius: 30,
+          transitions: [],
+        },
+      },
+    })
+
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "nodes": {
+          "q0": {
+            "innerLabel": "",
+            "label": "q0",
+            "transitions": [
+              {
+                "label": "a",
+                "to": "q1",
+              },
+              {
+                "label": "b",
+                "to": "q0",
+              },
+            ],
+          },
+          "q1": {
+            "innerLabel": "accept",
+            "label": "q1",
+            "transitions": [],
+          },
+        },
+        "start": "q0",
+      }
+    `)
   })
 })
