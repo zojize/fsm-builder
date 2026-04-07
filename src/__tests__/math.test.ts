@@ -9,6 +9,7 @@ import {
   offsetFromDeviation,
   perpLeft,
   rotate,
+  STRAIGHT_SNAP_RATIO,
   unitVec,
 } from '../fsm/math'
 
@@ -123,6 +124,28 @@ describe('controlFromOffsetCubic', () => {
     const [c1neg] = controlFromOffsetCubic(p0, p3, -10)
     // Positive offset should go in opposite direction of negative
     expect(Math.sign(c1pos.y)).not.toBe(Math.sign(c1neg.y))
+  })
+
+  it('snaps to straight when |offset|/L < STRAIGHT_SNAP_RATIO', () => {
+    const p0 = { x: 0, y: 0 }
+    const p3 = { x: 200, y: 0 }
+    // offset=3, L=200 → ratio=0.015 < 0.04 → should snap
+    const [c1, c2] = controlFromOffsetCubic(p0, p3, 3)
+    expect(c1.y).toBeCloseTo(0)
+    expect(c2.y).toBeCloseTo(0)
+  })
+
+  it('does not snap when |offset|/L >= STRAIGHT_SNAP_RATIO', () => {
+    const p0 = { x: 0, y: 0 }
+    const p3 = { x: 200, y: 0 }
+    // offset=10, L=200 → ratio=0.05 >= 0.04 → should NOT snap
+    const [c1] = controlFromOffsetCubic(p0, p3, 10)
+    expect(c1.y).not.toBeCloseTo(0)
+  })
+
+  it('sTRAIGHT_SNAP_RATIO is a reasonable value', () => {
+    expect(STRAIGHT_SNAP_RATIO).toBeGreaterThan(0)
+    expect(STRAIGHT_SNAP_RATIO).toBeLessThan(0.2)
   })
 })
 

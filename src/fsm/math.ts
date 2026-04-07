@@ -51,15 +51,23 @@ export function cubicTangent(p0: Vec2, p1: Vec2, p2: Vec2, p3: Vec2, t: number):
  * points apart along the chord direction (±sep), producing a more circular
  * arc shape for large offsets. Because the separation is symmetric, the
  * ±sep terms cancel at t = 0.5 and the midpoint property is preserved.
+ *
+ * A snap-to-straight dead zone zeroes the perpendicular displacement when
+ * `|offset|` is small relative to the chord length, producing a perfectly
+ * straight line. The stored `offset` value is not modified, preserving label
+ * anchor side information.
  */
+export const STRAIGHT_SNAP_RATIO = 0.04
+
 export function controlFromOffsetCubic(p0: Vec2, p3: Vec2, offset: number): [Vec2, Vec2] {
   const dx = p3.x - p0.x
   const dy = p3.y - p0.y
   const L = Math.hypot(dx, dy)
   const dir = unitVec(dx, dy)
   const n = perpLeft(dir)
-  const d = (4 / 3) * offset
-  const sep = Math.min(0.4 * Math.abs(offset), L > 0 ? L / 3 : 0)
+  const snapped = L > 0 && Math.abs(offset) / L < STRAIGHT_SNAP_RATIO ? 0 : offset
+  const d = (4 / 3) * snapped
+  const sep = Math.min(0.4 * Math.abs(snapped), L > 0 ? L / 3 : 0)
   const p1 = { x: p0.x + dx / 3 - dir.x * sep + n.x * d, y: p0.y + dy / 3 - dir.y * sep + n.y * d }
   const p2 = { x: p0.x + 2 * dx / 3 + dir.x * sep + n.x * d, y: p0.y + 2 * dy / 3 + dir.y * sep + n.y * d }
   return [p1, p2]
