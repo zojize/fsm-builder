@@ -182,12 +182,12 @@ export function createNewEdge(ctx: FSMContext, source: NodeId, transition: FSMTr
   // Inner helpers
 
   function createEdgeElement(): SVGGElement {
-    const g = createSvgEl('g')
-    g.classList.add('fsm-edge')
-    const hitPath = createSvgEl('path')
-    hitPath.classList.add('fsm-edge-hit')
-    const path = createSvgEl('path')
-    path.classList.add('fsm-edge-path')
+    const frag = cloneTemplate(ctx.templates, 'fsm-edge')
+    const g = frag.querySelector('g')! as SVGGElement
+    const hitPath = g.querySelector('.fsm-edge-hit')! as SVGPathElement
+    const path = g.querySelector('.fsm-edge-path')! as SVGPathElement
+    const arrow = g.querySelector('.fsm-edge-arrow')! as SVGPolygonElement
+
     g.dataset.from = source
     g.dataset.to = transition.to
     g.dataset.edgeId = id
@@ -197,13 +197,8 @@ export function createNewEdge(ctx: FSMContext, source: NodeId, transition: FSMTr
     path.setAttribute('d', geom.d)
     hitPath.setAttribute('d', geom.d)
 
-    const arrow = createSvgEl('polygon')
-    arrow.classList.add('fsm-edge-arrow')
     arrow.setAttribute('points', arrowHeadPoints(geom.tipPt, geom.tangUnit))
     arrow.setAttribute('mask', `url(#${ctx.maskId})`)
-    g.appendChild(arrow)
-    g.appendChild(hitPath)
-    g.appendChild(path)
 
     const { edgeFO, edgeInput } = initializeEdgeLabelEditor(geom)
 
@@ -519,7 +514,7 @@ export function createEdgeMasks(ctx: FSMContext): void {
   ctx.defs.appendChild(mask)
 
   function createNodeMaskShape(id: NodeId, node: { x: number, y: number, radius: number }) {
-    const circle = createSvgEl('circle')
+    const circle = cloneTemplate(ctx.templates, 'fsm-mask-circle').querySelector('circle')! as SVGCircleElement
     circle.dataset.nodeId = id
     updateMaskCircle(node, circle)
     mask.appendChild(circle)
