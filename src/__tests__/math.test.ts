@@ -4,7 +4,9 @@ import {
   controlFromOffsetCubic,
   cubicPoint,
   cubicTangent,
+  findMaxDeviation,
   normalizedAngleDelta,
+  offsetFromDeviation,
   perpLeft,
   rotate,
   unitVec,
@@ -94,12 +96,24 @@ describe('cubicTangent', () => {
 })
 
 describe('controlFromOffsetCubic', () => {
-  it('returns symmetric control points', () => {
+  it('places control points at L/3 and 2L/3 with zero offset', () => {
     const p0 = { x: 0, y: 0 }
-    const p3 = { x: 100, y: 0 }
+    const p3 = { x: 300, y: 0 }
     const [c1, c2] = controlFromOffsetCubic(p0, p3, 0)
-    // With zero offset, controls are symmetric about midpoint along the chord
-    expect(c1.y).toBeCloseTo(c2.y)
+    expect(c1.x).toBeCloseTo(100)
+    expect(c1.y).toBeCloseTo(0)
+    expect(c2.x).toBeCloseTo(200)
+    expect(c2.y).toBeCloseTo(0)
+  })
+
+  it('curve midpoint equals chord midpoint + offset·n', () => {
+    const p0 = { x: 0, y: 0 }
+    const p3 = { x: 200, y: 0 }
+    const offset = 40
+    const [c1, c2] = controlFromOffsetCubic(p0, p3, offset)
+    const mid = cubicPoint(p0, c1, c2, p3, 0.5)
+    expect(mid.x).toBeCloseTo(100)
+    expect(mid.y).toBeCloseTo(offset)
   })
 
   it('offsets control points perpendicular to chord', () => {
@@ -109,6 +123,76 @@ describe('controlFromOffsetCubic', () => {
     const [c1neg] = controlFromOffsetCubic(p0, p3, -10)
     // Positive offset should go in opposite direction of negative
     expect(Math.sign(c1pos.y)).not.toBe(Math.sign(c1neg.y))
+  })
+})
+
+describe('findMaxDeviation', () => {
+  it('returns null for empty trail', () => {
+    expect(findMaxDeviation([], { x: 0, y: 0 }, { x: 100, y: 0 })).toBeNull()
+  })
+
+  it('returns null for degenerate chord', () => {
+    const trail = [{ x: 5, y: 5 }]
+    expect(findMaxDeviation(trail, { x: 50, y: 50 }, { x: 50, y: 50 })).toBeNull()
+  })
+
+  it('finds the point with maximum perpendicular deviation', () => {
+    const p0 = { x: 0, y: 0 }
+    const p3 = { x: 100, y: 0 }
+    const trail = [
+      { x: 20, y: 5 },
+      { x: 50, y: 40 },
+      { x: 80, y: -10 },
+    ]
+    const result = findMaxDeviation(trail, p0, p3)!
+    expect(result.point).toBe(trail[1])
+    expect(result.deviation).toBeCloseTo(40)
+  })
+
+  it('returns signed deviation (negative for right-side)', () => {
+    const p0 = { x: 0, y: 0 }
+    const p3 = { x: 100, y: 0 }
+    const trail = [{ x: 50, y: -30 }]
+    const result = findMaxDeviation(trail, p0, p3)!
+    expect(result.deviation).toBeCloseTo(-30)
+  })
+})
+
+describe('offsetFromDeviation', () => {
+  it('returns 0 for degenerate chord', () => {
+    expect(offsetFromDeviation({ x: 0, y: 0 }, { x: 0, y: 0 }, { x: 5, y: 5 })).toBe(0)
+  })
+
+  it('at chord midpoint (s=0.5), offset equals perpendicular distance', () => {
+    const p0 = { x: 0, y: 0 }
+    const p3 = { x: 200, y: 0 }
+    const q = { x: 100, y: 60 }
+    const offset = offsetFromDeviation(p0, p3, q)
+    // At s=0.5: offset = qPerp / (4 * 0.5 * 0.5) = qPerp / 1 = 60
+    expect(offset).toBeCloseTo(60)
+  })
+
+  it('amplifies deviation near endpoints', () => {
+    const p0 = { x: 0, y: 0 }
+    const p3 = { x: 200, y: 0 }
+    const qMid = { x: 100, y: 30 }
+    const qNearStart = { x: 40, y: 30 }
+    const offsetMid = offsetFromDeviation(p0, p3, qMid)
+    const offsetNear = offsetFromDeviation(p0, p3, qNearStart)
+    // Same perpendicular distance but closer to endpoint needs larger offset
+    expect(Math.abs(offsetNear)).toBeGreaterThan(Math.abs(offsetMid))
+  })
+
+  it('produces offset that makes the curve midpoint match expected displacement', () => {
+    const p0 = { x: 0, y: 0 }
+    const p3 = { x: 200, y: 0 }
+    const q = { x: 100, y: 50 }
+    const offset = offsetFromDeviation(p0, p3, q)
+    // At chord midpoint (s=0.5), offset should equal perpendicular distance
+    expect(offset).toBeCloseTo(50)
+    const [c1, c2] = controlFromOffsetCubic(p0, p3, offset)
+    const mid = cubicPoint(p0, c1, c2, p3, 0.5)
+    expect(mid.y).toBeCloseTo(50)
   })
 })
 

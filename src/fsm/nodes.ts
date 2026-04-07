@@ -20,7 +20,7 @@ import {
   computeSelfEdgeGeom,
   createNewEdge,
 } from './edges'
-import { arrowHeadPoints, perpLeft, unitVec } from './math'
+import { arrowHeadPoints, offsetFromDeviation, unitVec } from './math'
 import { addNodeToSelection, removeNodeFromSelection, selectNode } from './selection'
 import { runValidation } from './validation'
 
@@ -357,6 +357,7 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
 
       const start = { x: node.x, y: node.y }
       const liveRadius = node.radius
+
       const previewG = createSvgEl('g')
       previewG.setAttribute('mask', `url(#${ctx.maskId})`)
       previewG.classList.add('fsm-edge', 'preview')
@@ -382,14 +383,8 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
           }
           else {
             const target = ctx.getNode(hoverId)!
-            const p0 = start
-            const p3 = { x: target.x, y: target.y }
-            const cdir = unitVec(p3.x - p0.x, p3.y - p0.y)
-            const n = perpLeft(cdir)
-            const m = { x: (p0.x + p3.x) / 2, y: (p0.y + p3.y) / 2 }
-            const v = { x: pt.x - m.x, y: pt.y - m.y }
-            const signed = v.x * n.x + v.y * n.y
-            const geom = computeNonSelfEdgeGeom(p0, p3, target.radius, signed)
+            const offset = offsetFromDeviation(start, { x: target.x, y: target.y }, pt)
+            const geom = computeNonSelfEdgeGeom(start, { x: target.x, y: target.y }, target.radius, offset)
             previewPath.setAttribute('d', geom.d)
             previewArrow.setAttribute('points', arrowHeadPoints(geom.tipPt, geom.tangUnit))
           }
@@ -414,14 +409,8 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
           }
           else {
             const target = ctx.getNode(toId)!
-            const p0 = start
-            const p3 = { x: target.x, y: target.y }
-            const dir = unitVec(p3.x - p0.x, p3.y - p0.y)
-            const n = perpLeft(dir)
-            const m = { x: (p0.x + p3.x) / 2, y: (p0.y + p3.y) / 2 }
-            const v = { x: pt.x - m.x, y: pt.y - m.y }
-            const signed = v.x * n.x + v.y * n.y
-            addTransitionInternal({ from: id, to: toId, label: '', offset: signed })
+            const offset = offsetFromDeviation(start, { x: target.x, y: target.y }, pt)
+            addTransitionInternal({ from: id, to: toId, label: '', offset })
           }
           ctx.fsmContainer.dataset.editMode = 'default'
           if (ctx.validationEnabled)

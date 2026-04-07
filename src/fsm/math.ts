@@ -40,22 +40,87 @@ export function cubicTangent(p0: Vec2, p1: Vec2, p2: Vec2, p3: Vec2, t: number):
 }
 
 /**
- * Compute symmetric cubic Bézier control points that produce a curve with its
- * midpoint offset from the chord by `offset` pixels along the chord normal.
+ * Compute symmetric cubic Bézier control points that produce a curve whose
+ * midpoint is displaced from the chord by exactly `offset` pixels along the
+ * chord normal.
+ *
+ * Control points start at L/3 and 2L/3 along the chord with perpendicular
+ * displacement `d = (4/3)·offset`, ensuring B(0.5) = midpoint + offset·n.
+ *
+ * An additional proportional separation `sep ∝ |offset|` pushes the control
+ * points apart along the chord direction (±sep), producing a more circular
+ * arc shape for large offsets. Because the separation is symmetric, the
+ * ±sep terms cancel at t = 0.5 and the midpoint property is preserved.
  */
 export function controlFromOffsetCubic(p0: Vec2, p3: Vec2, offset: number): [Vec2, Vec2] {
-  // arbitrary scaling to make links feel snappier with cursor
-  offset *= 1.5
-  const dir = unitVec(p3.x - p0.x, p3.y - p0.y)
+  const dx = p3.x - p0.x
+  const dy = p3.y - p0.y
+  const L = Math.hypot(dx, dy)
+  const dir = unitVec(dx, dy)
   const n = perpLeft(dir)
-  const m = { x: (p0.x + p3.x) / 2, y: (p0.y + p3.y) / 2 }
-  const sepScale = 0.4
-  const dispScale = 0.8
-  const sep = Math.abs(offset) * sepScale
-  const disp = offset * dispScale
-  const p1 = { x: m.x - dir.x * sep + n.x * disp, y: m.y - dir.y * sep + n.y * disp }
-  const p2 = { x: m.x + dir.x * sep + n.x * disp, y: m.y + dir.y * sep + n.y * disp }
+  const d = (4 / 3) * offset
+  const sep = Math.min(0.4 * Math.abs(offset), L > 0 ? L / 3 : 0)
+  const p1 = { x: p0.x + dx / 3 - dir.x * sep + n.x * d, y: p0.y + dy / 3 - dir.y * sep + n.y * d }
+  const p2 = { x: p0.x + 2 * dx / 3 + dir.x * sep + n.x * d, y: p0.y + 2 * dy / 3 + dir.y * sep + n.y * d }
   return [p1, p2]
+}
+
+/**
+ * Find the trail point with the largest absolute perpendicular deviation from
+ * the chord p0→p3. Returns the point and its signed deviation, or `null` when
+ * the trail is empty or the chord is degenerate.
+ */
+export function findMaxDeviation(trail: Vec2[], p0: Vec2, p3: Vec2): { point: Vec2, deviation: number } | null {
+  if (trail.length === 0)
+    return null
+  const dx = p3.x - p0.x
+  const dy = p3.y - p0.y
+  const L = Math.hypot(dx, dy)
+  if (L < 1e-6)
+    return null
+  const nx = -dy / L
+  const ny = dx / L
+  let best: Vec2 = trail[0]
+  let bestAbs = 0
+  let bestDev = 0
+  for (const q of trail) {
+    const dev = (q.x - p0.x) * nx + (q.y - p0.y) * ny
+    if (Math.abs(dev) > bestAbs) {
+      bestAbs = Math.abs(dev)
+      bestDev = dev
+      best = q
+    }
+  }
+  return { point: best, deviation: bestDev }
+}
+
+/**
+ * Compute the `offset` value that makes the cubic Bézier (using
+ * {@link controlFromOffsetCubic}) pass through point `q`.
+ *
+ * Because `controlFromOffsetCubic` places control points at L/3 and 2L/3,
+ * the perpendicular component of the curve is `B⊥(t) = 4·offset·t·(1−t)`.
+ * Projecting `q` onto the chord gives chord-fraction `s` (clamped to
+ * [0.15, 0.85] to avoid endpoint singularities), so:
+ *
+ *     offset = q⊥ / (4·s·(1−s))
+ */
+export function offsetFromDeviation(p0: Vec2, p3: Vec2, q: Vec2): number {
+  const dx = p3.x - p0.x
+  const dy = p3.y - p0.y
+  const L = Math.hypot(dx, dy)
+  if (L < 1e-6)
+    return 0
+  const dirX = dx / L
+  const dirY = dy / L
+  const nx = -dirY
+  const ny = dirX
+  const rx = q.x - p0.x
+  const ry = q.y - p0.y
+  let s = (rx * dirX + ry * dirY) / L
+  s = Math.max(0.15, Math.min(0.85, s))
+  const qPerp = rx * nx + ry * ny
+  return qPerp / (4 * s * (1 - s))
 }
 
 /** Parameters for drawing a self-loop arc via SVG `A` command. */
