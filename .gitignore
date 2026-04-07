@@ -9,3 +9,6 @@ node_modules
 *.log
 *.tsbuildinfo
 .playwright-mcp/
+survey-presentation/
+*.csv.zip
+docs/superpowers/specs/
