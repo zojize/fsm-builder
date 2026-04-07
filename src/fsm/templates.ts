@@ -1,5 +1,5 @@
 /** Identity tag for HTML syntax highlighting in template literals. */
-export function html(strings: TemplateStringsArray, ...values: unknown[]) {
+function html(strings: TemplateStringsArray, ...values: unknown[]) {
   return String.raw(strings, ...values)
 }
 

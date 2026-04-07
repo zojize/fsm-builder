@@ -2,7 +2,6 @@ import type { Vec2 } from './math'
 import type { TemplateRefs } from './templates'
 import { cloneTemplate } from './templates'
 
-export const XHTML_NS = 'http://www.w3.org/1999/xhtml'
 const SVG_NS = 'http://www.w3.org/2000/svg'
 
 /** Create an SVG element in the SVG namespace. */

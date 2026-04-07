@@ -152,7 +152,6 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
     let circle = g.querySelector<SVGCircleElement>('circle')
     if (!circle) {
       circle = cloneTemplate(ctx.templates, 'fsm-node').querySelector('circle')! as SVGCircleElement
-      circle.classList.add('fsm-node-circle')
       g.appendChild(circle)
     }
     circle.setAttribute('cx', `${node.x}`)
