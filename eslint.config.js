@@ -5,6 +5,6 @@ export default antfu(
     vue: true,
     unocss: true,
     formatters: true,
-    ignores: [],
+    ignores: ['docs/'],
   },
 )
