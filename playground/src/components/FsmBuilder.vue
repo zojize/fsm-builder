@@ -19,7 +19,7 @@ onMounted(() => {
     debug: true,
     initialState: toRaw(state.value) ?? { nodes: {} },
     onChange: (newState) => {
-      state.value = newState
+      state.value = structuredClone(newState)
     },
     simulation: { variables },
     validate: {
