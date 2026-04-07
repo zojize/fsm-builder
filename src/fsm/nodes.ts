@@ -176,7 +176,7 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
       innerFO.dataset.nodeId = id
       const fontSize = getFontSize((ctx.fsmState.nodes[id].innerLabel || '').length, ctx.options.fontSizeBreakpoints?.innerNode, ctx.defaultInnerNodeFontSize)
       if (ctx.options.readonly) {
-        const text = createFOText(ctx.fsmState.nodes[id].innerLabel || '', fontSize, 'center')
+        const text = createFOText(ctx.templates, ctx.fsmState.nodes[id].innerLabel || '', fontSize, 'center')
         innerFO.appendChild(text)
       }
       else {
@@ -253,7 +253,7 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
       outerFO.classList.add('fsm-node-label-editor')
       outerFO.dataset.nodeId = id
       if (ctx.options.readonly) {
-        const text = createFOText(node.label || '', fontSize, 'center')
+        const text = createFOText(ctx.templates, node.label || '', fontSize, 'center')
         outerFO.appendChild(text)
       }
       else {

@@ -240,7 +240,7 @@ export function createNewEdge(ctx: FSMContext, source: NodeId, transition: FSMTr
     setFOBounds(edgeFO, pos0.x, pos0.y, ew, eh)
 
     if (ctx.options.readonly) {
-      const textEl = createFOText(transition.label || '', fontSize, textAnchorToAlign(layout.textAnchor))
+      const textEl = createFOText(ctx.templates, transition.label || '', fontSize, textAnchorToAlign(layout.textAnchor))
       edgeFO.appendChild(textEl)
     }
     else {

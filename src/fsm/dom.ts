@@ -1,4 +1,6 @@
 import type { Vec2 } from './math'
+import type { TemplateRefs } from './templates'
+import { cloneTemplate } from './templates'
 
 export const XHTML_NS = 'http://www.w3.org/1999/xhtml'
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -104,13 +106,11 @@ export function restoreInputState(input: HTMLInputElement, state: ReturnType<typ
 }
 
 /** Create a non-interactive text `<div>` for use inside a `<foreignObject>` (readonly labels). */
-export function createFOText(value: string, fontSize: string, textAlign: 'left' | 'center' | 'right'): HTMLDivElement {
-  const el = document.createElementNS(XHTML_NS, 'div') as HTMLDivElement
-  el.classList.add('fsm-text')
+export function createFOText(templates: TemplateRefs, value: string, fontSize: string, textAlign: 'left' | 'center' | 'right'): HTMLDivElement {
+  const el = cloneTemplate(templates, 'fsm-text').querySelector('div')! as HTMLDivElement
   el.style.fontSize = fontSize
   el.style.textAlign = textAlign
   el.textContent = value
-  el.style.pointerEvents = 'none'
   return el
 }
 

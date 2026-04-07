@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createFOText, createSvgEl, getFontSize, setFOBounds } from '../fsm/dom'
+import { initTemplates } from '../fsm/templates'
 
 describe('getFontSize', () => {
   it('returns px value for number breakpoint', () => {
@@ -53,7 +54,8 @@ describe('setFOBounds', () => {
 
 describe('createFOText', () => {
   it('creates a div with expected attributes', () => {
-    const el = createFOText('hello', '16px', 'center')
+    const templates = initTemplates()
+    const el = createFOText(templates, 'hello', '16px', 'center')
     expect(el.tagName).toBe('DIV')
     expect(el.textContent).toBe('hello')
     expect(el.classList.contains('fsm-text')).toBe(true)
@@ -63,7 +65,8 @@ describe('createFOText', () => {
   })
 
   it('snapshot output', () => {
-    const el = createFOText('q0', '20px', 'left')
+    const templates = initTemplates()
+    const el = createFOText(templates, 'q0', '20px', 'left')
     expect(el.outerHTML).toMatchSnapshot()
   })
 })
