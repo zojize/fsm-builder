@@ -9,6 +9,7 @@ import { createNewNode, createStartMarker, findNodeAtPt, focusInnerNodeInput, re
 import { clearSelection, emitSelectionChanged, syncNodeSelection } from './fsm/selection'
 import { createSidebar } from './fsm/sidebar'
 import { createSimulation } from './fsm/simulation'
+import { initTemplates } from './fsm/templates'
 import { runValidation } from './fsm/validation'
 
 export type { FSMBuilderAPI, FSMEventHandler, FSMEventMap } from './fsm/events'
@@ -152,6 +153,7 @@ export function createFSMBuilder({
     edgesGroup,
     nodesGroup,
     overlay,
+    templates: initTemplates(),
     maskId: `edge-mask-${Math.random().toString(16).slice(2)}`,
     fsmState,
     nodeAbortControllers,

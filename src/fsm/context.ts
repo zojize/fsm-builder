@@ -1,6 +1,7 @@
 import type { FSMEventEmitter } from './events'
 import type { FSMHistory } from './history'
 import type { SimulationController } from './simulation'
+import type { TemplateRefs } from './templates'
 import type { EdgeId, FSMNode, FSMOptions, FSMState, FSMTransition, NodeId } from './types'
 
 /**
@@ -23,6 +24,7 @@ export interface FSMContext {
   readonly edgesGroup: SVGGElement
   readonly nodesGroup: SVGGElement
   readonly overlay: SVGGElement
+  readonly templates: TemplateRefs
   /** Unique mask id for this instance */
   readonly maskId: string
 
