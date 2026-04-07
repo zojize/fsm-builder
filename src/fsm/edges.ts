@@ -13,7 +13,6 @@ import {
   saveInputState,
   setFOBounds,
   stopPointerEventPropagation,
-  XHTML_NS,
 } from './dom'
 import {
   arcCenterFromEndpoints,
@@ -30,6 +29,7 @@ import {
 
 } from './math'
 import { addEdgeToSelection, removeEdgeFromSelection, selectEdge } from './selection'
+import { cloneTemplate } from './templates'
 import { runValidation } from './validation'
 
 /** Computed geometric data for a rendered FSM edge. */
@@ -244,11 +244,7 @@ export function createNewEdge(ctx: FSMContext, source: NodeId, transition: FSMTr
       edgeFO.appendChild(textEl)
     }
     else {
-      const edgeInput = document.createElementNS(XHTML_NS, 'input') as HTMLInputElement
-      edgeInput.type = 'text'
-      edgeInput.autocomplete = 'off'
-      edgeInput.maxLength = 50
-      edgeInput.classList.add('fsm-input')
+      const edgeInput = cloneTemplate(ctx.templates, 'fsm-input').querySelector('input')! as HTMLInputElement
       edgeInput.dataset.validateType = 'edge'
       if (ctx.validationEnabled) {
         const validateConfig = ctx.validateConfig
