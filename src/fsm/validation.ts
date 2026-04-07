@@ -1,6 +1,6 @@
 import type { FSMContext } from './context'
 import type { ValidateOptions } from './types'
-import { createIconElement } from './icons'
+import { cloneTemplate } from './templates'
 
 type ValidateKind = 'edge' | 'innerNode' | 'outerNode'
 
@@ -104,25 +104,21 @@ export function runValidation(ctx: FSMContext, removeOnly = false): void {
   ul.className = 'list'
 
   if (errors.length === 0) {
-    const li = document.createElement('li')
-    li.className = 'item ok'
-    li.appendChild(createIconElement('i-bi-check-lg'))
-    const span = document.createElement('span')
-    span.className = 'msg'
-    span.textContent = 'All inputs are valid.'
-    li.appendChild(span)
-    ul.appendChild(li)
+    const frag = cloneTemplate(ctx.templates, 'fsm-validation-item')
+    const li = frag.querySelector('li')!
+    li.classList.add('ok')
+    li.querySelector('span:first-child')!.className = 'i-bi-check-lg'
+    li.querySelector('.msg')!.textContent = 'All inputs are valid.'
+    ul.appendChild(frag)
   }
   else {
     for (const msg of errors) {
-      const li = document.createElement('li')
-      li.className = 'item error'
-      li.appendChild(createIconElement('i-bi-x-lg'))
-      const span = document.createElement('span')
-      span.className = 'msg'
-      span.textContent = msg
-      li.appendChild(span)
-      ul.appendChild(li)
+      const frag = cloneTemplate(ctx.templates, 'fsm-validation-item')
+      const li = frag.querySelector('li')!
+      li.classList.add('error')
+      li.querySelector('span:first-child')!.className = 'i-bi-x-lg'
+      li.querySelector('.msg')!.textContent = msg
+      ul.appendChild(frag)
     }
   }
 
