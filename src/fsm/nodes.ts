@@ -13,7 +13,6 @@ import {
   saveInputState,
   setFOBounds,
   stopPointerEventPropagation,
-  XHTML_NS,
 } from './dom'
 import {
   computeNonSelfEdgeGeom,
@@ -22,6 +21,7 @@ import {
 } from './edges'
 import { arrowHeadPoints, offsetFromDeviation, unitVec } from './math'
 import { addNodeToSelection, removeNodeFromSelection, selectNode } from './selection'
+import { cloneTemplate } from './templates'
 import { runValidation } from './validation'
 
 export { clearSelection } from './selection'
@@ -180,11 +180,7 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
         innerFO.appendChild(text)
       }
       else {
-        const input = document.createElementNS(XHTML_NS, 'input') as HTMLInputElement
-        input.type = 'text'
-        input.autocomplete = 'off'
-        input.maxLength = 50
-        input.classList.add('fsm-input')
+        const input = cloneTemplate(ctx.templates, 'fsm-input').querySelector('input')! as HTMLInputElement
         input.dataset.validateType = 'innerNode'
         if (ctx.validationEnabled) {
           const validateConfig = ctx.validateConfig
@@ -257,12 +253,8 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
         outerFO.appendChild(text)
       }
       else {
-        const input = document.createElementNS(XHTML_NS, 'input') as HTMLInputElement
-        input.autocomplete = 'off'
+        const input = cloneTemplate(ctx.templates, 'fsm-input').querySelector('input')! as HTMLInputElement
         outerFO.addEventListener('click', () => input.focus())
-        input.type = 'text'
-        input.maxLength = 50
-        input.classList.add('fsm-input')
         input.dataset.validateType = 'outerNode'
         if (ctx.validationEnabled) {
           const validateConfig = ctx.validateConfig
