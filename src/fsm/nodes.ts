@@ -145,13 +145,13 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
   function createNodeEl(): SVGGElement {
     let g = ctx.svg.querySelector<SVGGElement>(`g[data-node-id="${id}"]`)
     if (!g) {
-      g = createSvgEl('g')
+      const frag = cloneTemplate(ctx.templates, 'fsm-node')
+      g = frag.querySelector('g')! as SVGGElement
       g.dataset.nodeId = id
-      g.classList.add('fsm-node')
     }
     let circle = g.querySelector<SVGCircleElement>('circle')
     if (!circle) {
-      circle = createSvgEl('circle')
+      circle = cloneTemplate(ctx.templates, 'fsm-node').querySelector('circle')! as SVGCircleElement
       circle.classList.add('fsm-node-circle')
       g.appendChild(circle)
     }
@@ -350,15 +350,11 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
       const start = { x: node.x, y: node.y }
       const liveRadius = node.radius
 
-      const previewG = createSvgEl('g')
+      const frag = cloneTemplate(ctx.templates, 'fsm-edge-preview')
+      const previewG = frag.querySelector('g')! as SVGGElement
       previewG.setAttribute('mask', `url(#${ctx.maskId})`)
-      previewG.classList.add('fsm-edge', 'preview')
-      const previewPath = createSvgEl('path')
-      previewPath.classList.add('fsm-edge-path')
-      const previewArrow = createSvgEl('polygon')
-      previewArrow.classList.add('fsm-edge-arrow')
-      previewG.appendChild(previewPath)
-      previewG.appendChild(previewArrow)
+      const previewPath = previewG.querySelector('path')! as SVGPathElement
+      const previewArrow = previewG.querySelector('polygon')! as SVGPolygonElement
       ctx.svg.appendChild(previewG)
 
       const onMoveLink = (ev: PointerEvent) => {
