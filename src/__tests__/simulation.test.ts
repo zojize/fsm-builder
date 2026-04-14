@@ -174,7 +174,7 @@ describe('createSimulation', () => {
     sim.step()
 
     const input = ctx.fsmContainer.querySelector('input') as HTMLInputElement
-    expect(input.classList.contains('!border-red-400')).toBe(true)
+    expect(input.classList.contains('!uno-border-red-400')).toBe(true)
     // No error toast should appear for this case
     const error = ctx.fsmContainer.querySelector('.fsm-sim-error')
     expect(error).toBeNull()
@@ -190,7 +190,7 @@ describe('createSimulation', () => {
     sim.reset()
 
     const input = ctx.fsmContainer.querySelector('input') as HTMLInputElement
-    expect(input.classList.contains('!border-red-400')).toBe(false)
+    expect(input.classList.contains('!uno-border-red-400')).toBe(false)
     sim.destroy()
   })
 
