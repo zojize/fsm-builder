@@ -60,11 +60,11 @@ export function createSimulation(ctx: FSMContext): SimulationController {
         const el = variableInputEls[v]
         const inputVal = el?.value ?? ''
         if (inputVal.length === 0) {
-          el?.classList.add('!border-red-400')
+          el?.classList.add('!uno-border-red-400')
           missingInput = true
         }
         else {
-          el?.classList.remove('!border-red-400')
+          el?.classList.remove('!uno-border-red-400')
           context[v] = inputVal[0] === '1'
         }
       }
@@ -104,7 +104,7 @@ export function createSimulation(ctx: FSMContext): SimulationController {
       currentNodeId = undefined
       highlightNode(undefined)
       for (const el of Object.values(variableInputEls))
-        el.classList.remove('!border-red-400')
+        el.classList.remove('!uno-border-red-400')
     },
 
     exit() {
@@ -169,7 +169,10 @@ export function createSimulation(ctx: FSMContext): SimulationController {
     let errorEl = panel.querySelector<HTMLDivElement>('.fsm-sim-error')
     if (!errorEl) {
       errorEl = document.createElement('div')
-      errorEl.className = 'fsm-sim-error bg-red-50 border border-red-400 text-red-900 px-2.5 py-1.5 rounded-md text-xs'
+      errorEl.className = 'fsm-sim-error uno-(whitespace-nowrap bg-red-50 border border-red-400 text-red-900 px-2.5 py-1.5 rounded-md text-xs shadow-sm)'
+      errorEl.style.position = 'absolute'
+      errorEl.style.top = 'calc(100% + 8px)'
+      errorEl.style.right = '0'
       panel.appendChild(errorEl)
     }
     errorEl.textContent = msg
@@ -181,18 +184,18 @@ export function createSimulation(ctx: FSMContext): SimulationController {
 
   function createPanel(variables: string): HTMLDivElement {
     const el = document.createElement('div')
-    el.className = 'absolute top-2 right-2 z-15 bg-white border border-gray-200 rounded-lg px-3 py-2.5 font-[--fsm-font-family] text-[13px] flex flex-col gap-1.5 shadow-sm select-none'
+    el.className = 'uno-(absolute top-2 right-2 z-15 bg-white border border-gray-200 rounded-lg px-3 py-2.5 font-[--fsm-font-family] text-[13px] flex flex-col gap-1.5 shadow-sm select-none)'
 
     // Header
     const header = document.createElement('div')
-    header.className = 'flex justify-between items-center gap-2 font-semibold text-xs text-gray-700'
+    header.className = 'uno-(flex justify-between items-center gap-2 font-semibold text-xs text-gray-700)'
     const title = document.createElement('span')
     title.textContent = 'Simulation'
     header.appendChild(title)
 
     const closeBtn = document.createElement('button')
     closeBtn.type = 'button'
-    closeBtn.className = 'size-5 grid place-items-center border-none bg-transparent cursor-pointer rounded-sm p-0 text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+    closeBtn.className = 'uno-(size-5 grid place-items-center border-none bg-transparent cursor-pointer rounded-sm p-0 text-gray-500) hover:uno-(bg-gray-100 text-gray-900)'
     closeBtn.setAttribute('aria-label', 'Close simulation')
     closeBtn.title = 'Close simulation'
     closeBtn.appendChild(createIconElement('i-bi-x-lg'))
@@ -204,16 +207,16 @@ export function createSimulation(ctx: FSMContext): SimulationController {
     variableInputEls = {}
     for (const v of variables) {
       const row = document.createElement('div')
-      row.className = 'flex items-center gap-1.5'
+      row.className = 'uno-(flex items-center gap-1.5)'
 
       const label = document.createElement('span')
-      label.className = 'font-medium min-w-3.5 text-gray-700'
+      label.className = 'uno-(font-medium min-w-3.5 text-gray-700)'
       label.textContent = v
       row.appendChild(label)
 
       const input = document.createElement('input')
       input.type = 'text'
-      input.className = 'w-20 border border-gray-300 rounded-sm px-1.5 py-0.75 font-[--fsm-font-family] text-[13px] outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15'
+      input.className = 'uno-(w-20 border border-gray-300 rounded-sm px-1.5 py-0.75 font-[--fsm-font-family] text-[13px] outline-none) focus:uno-(border-blue-600 ring-2 ring-blue-600/15)'
       input.placeholder = `${v} input`
       input.addEventListener('keydown', (e) => {
         if (e.key !== '0' && e.key !== '1' && e.key !== 'Backspace' && e.key !== 'Delete'

@@ -231,23 +231,11 @@ export function arcCenterFromEndpoints(p0: Vec2, p1: Vec2, R: number, largeArcFl
   function angles(c: Vec2) {
     return { a0: Math.atan2(p0.y - c.y, p0.x - c.x), a1: Math.atan2(p1.y - c.y, p1.x - c.x) }
   }
-  function angleDelta(a0: number, a1: number, sweep: 0 | 1) {
-    let delta = a1 - a0
-    if (sweep === 1) {
-      if (delta < 0)
-        delta += 2 * Math.PI
-    }
-    else {
-      if (delta > 0)
-        delta -= 2 * Math.PI
-    }
-    return delta
-  }
 
   const cand1 = angles(c1)
   const cand2 = angles(c2)
-  const d1 = angleDelta(cand1.a0, cand1.a1, sweepFlag)
-  const d2ang = angleDelta(cand2.a0, cand2.a1, sweepFlag)
+  const d1 = normalizedAngleDelta(cand1.a0, cand1.a1, sweepFlag)
+  const d2ang = normalizedAngleDelta(cand2.a0, cand2.a1, sweepFlag)
   const use1 = largeArcFlag === 1 ? Math.abs(d1) > Math.PI : Math.abs(d1) <= Math.PI
   const use2 = largeArcFlag === 1 ? Math.abs(d2ang) > Math.PI : Math.abs(d2ang) <= Math.PI
 
@@ -282,7 +270,6 @@ export function arcCenterFromEndpoints(p0: Vec2, p1: Vec2, R: number, largeArcFl
   return { center, startAngle, endAngle }
 }
 
-/** Returns the signed angular delta from `a0` to `a1` normalised to the given sweep direction. */
 /** Returns the signed angular delta from `a0` to `a1`, normalised to the given sweep direction. */
 export function normalizedAngleDelta(a0: number, a1: number, sweep: 0 | 1): number {
   let delta = a1 - a0

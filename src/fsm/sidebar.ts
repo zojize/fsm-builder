@@ -1,6 +1,7 @@
 import type { FSMContext } from './context'
 import { copyToClipboard } from './dom'
 import { createIconElement } from './icons'
+import { toggleStartState } from './nodes'
 import { runValidation } from './validation'
 
 function makeBtn(
@@ -73,17 +74,7 @@ export function createSidebar(container: HTMLElement, ctx: FSMContext, removeNod
     if (ctx.selectedNodeIds.size !== 1)
       return
     const id = ctx.selectedNodeIds.values().next().value!
-    if (ctx.fsmState.start === id) {
-      delete ctx.fsmState.start
-      ctx.emitter.emit('start:changed', { start: undefined })
-    }
-    else {
-      ctx.fsmState.start = id
-      ctx.emitter.emit('start:changed', { start: id })
-    }
-    ctx.tryOnChange(ctx.fsmState)
-    if (ctx.validationEnabled)
-      runValidation(ctx, !ctx.autoValidate)
+    toggleStartState(ctx, id)
   })
   list.appendChild(startBtn)
 

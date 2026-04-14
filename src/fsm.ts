@@ -74,17 +74,13 @@ export function createFSMBuilder({
   fontSizeBreakpoints.innerNode ??= defaultFSMOptions.fontSizeBreakpoints.innerNode
   fontSizeBreakpoints.outerNode ??= defaultFSMOptions.fontSizeBreakpoints.outerNode
 
-  const validateConfig = validate
-  const validationEnabled = validateConfig !== false
+  const validationEnabled = validate !== false
   const emitter = createEventEmitter()
 
-  // FSM state
   const fsmState: FSMState = initialState
 
-  // SVG init
   const { svg, defs, overlay, edgesGroup, nodesGroup } = initializeSvg(fsmContainer)
 
-  // Node id counter
   let nodeIdCounter = 0
   const createNodeId = (): NodeId => {
     let id = `node-${nodeIdCounter++}`
@@ -93,7 +89,6 @@ export function createFSMBuilder({
     return id
   }
 
-  // Edge id counter
   let edgeIdCounter = 0
   const edgeIdToTransition: FSMContext['edgeIdToTransition'] = {}
   const createEdgeId = (): EdgeId => {
@@ -103,13 +98,11 @@ export function createFSMBuilder({
     return id
   }
 
-  // AbortControllers for per-node event listener lifetimes
   const nodeAbortControllers: Record<NodeId, AbortController> = {}
   for (const id of Object.keys(fsmState.nodes)) {
     nodeAbortControllers[id] = new AbortController()
   }
 
-  // Debounce onChange and the 'change' event
   let onChangeTimeoutId: number | undefined
   const tryOnChange = (state: FSMState) => {
     clearTimeout(onChangeTimeoutId)
@@ -144,7 +137,7 @@ export function createFSMBuilder({
       maxHistory,
       onChange,
     },
-    validateConfig,
+    validateConfig: validate,
     validationEnabled,
     autoValidate: validationEnabled && autoValidate,
     fsmContainer,
@@ -184,22 +177,38 @@ export function createFSMBuilder({
 
   createEdgeMasks(ctx)
 
-  // render edges first (go under nodes)
+  // render edges before nodes so nodes paint on top
   for (const [source, node] of Object.entries(fsmState.nodes)) {
     for (const transition of node.transitions) {
       createNewEdge(ctx, source, transition)
     }
   }
 
-  // render nodes
   for (const [id, node] of Object.entries(fsmState.nodes)) {
     createNewNode(ctx, id, node)
   }
 
   createStartMarker(ctx)
 
-  // Undo/redo history
   ctx.history = !readonly ? createHistory(ctx, loadState, maxHistory) : null
+
+  function addNodeAt(pt: { x: number, y: number }): NodeId {
+    const id = createNodeId()
+    const node: FSMNode = {
+      label: 'label',
+      innerLabel: '',
+      x: pt.x,
+      y: pt.y,
+      radius: defaultRadius,
+      transitions: [],
+    }
+    fsmState.nodes[id] = node
+    nodeAbortControllers[id] = new AbortController()
+    createNewNode(ctx, id, node)
+    tryOnChange(fsmState)
+    focusInnerNodeInput(ctx, id)
+    return id
+  }
 
   if (!readonly && (debug || sidebar))
     createSidebar(fsmContainer, ctx, id => removeNode(ctx, id))
@@ -245,8 +254,8 @@ export function createFSMBuilder({
   // Mount validation UI if enabled
   if (validationEnabled && !readonly) {
     let validationContainer = fsmContainer
-    if (validateConfig && (validateConfig as any).container) {
-      const sel = (validateConfig as any).container as string
+    if (validate && validate.container) {
+      const sel = validate.container
       validationContainer = document.querySelector<HTMLElement>(sel) ?? fsmContainer
       if (validationContainer === fsmContainer && debug) {
         console.warn(`FSM: validation container ${sel} not found, using default`)
@@ -410,9 +419,7 @@ export function createFSMBuilder({
           const active = document.activeElement
           if (active instanceof HTMLInputElement && fsmContainer.contains(active)) {
             if (active.value !== (active.dataset.focusValue ?? ''))
-              return // Input was edited — let browser handle native undo/redo
-          // Input unchanged — skip blur to avoid spurious commit, proceed with FSM undo
-          // (loadState will destroy the input via DOM removal; isRestoring prevents capture)
+              return
           }
           if (e.key === 'z' && !e.shiftKey) {
             e.preventDefault()
@@ -471,7 +478,7 @@ export function createFSMBuilder({
     }
 
     const resizeObserver = new ResizeObserver(() => updateViewBox())
-    resizeObserver.observe(document.body)
+    resizeObserver.observe(fsmContainer)
     ctx.destroyCallbacks.push(() => resizeObserver.disconnect())
 
     // Panning in 'move' mode or Cmd/Ctrl+Shift+drag
@@ -479,8 +486,6 @@ export function createFSMBuilder({
       const mode = fsmContainer.dataset.editMode
       const forcePan = (e.metaKey || e.ctrlKey) && e.shiftKey
       if (!forcePan && mode !== 'move')
-        return
-      if (!forcePan && mode !== 'move' && e.target !== svg)
         return
       e.preventDefault()
       let lastX = e.clientX
@@ -533,7 +538,6 @@ export function createFSMBuilder({
       window.removeEventListener('blur', restoreMode)
     })
 
-    // Double-click on background → add node
     svg.addEventListener('dblclick', (e: MouseEvent) => {
       if (fsmContainer.dataset.editMode !== 'default')
         return
@@ -542,20 +546,7 @@ export function createFSMBuilder({
       const pt = clientToSvg(svg, e.clientX, e.clientY)
       if (findNodeAtPt(ctx, pt))
         return
-      const id = createNodeId()
-      const node: FSMNode = {
-        label: 'label',
-        innerLabel: '',
-        x: pt.x,
-        y: pt.y,
-        radius: defaultRadius,
-        transitions: [],
-      }
-      fsmState.nodes[id] = node
-      nodeAbortControllers[id] = new AbortController()
-      createNewNode(ctx, id, node)
-      tryOnChange(fsmState)
-      focusInnerNodeInput(ctx, id)
+      addNodeAt(pt)
     })
 
     // Add mode: show preview circle and click to add node
@@ -597,21 +588,8 @@ export function createFSMBuilder({
       if (mode !== 'add' || e.target !== svg)
         return
       const pt = clientToSvg(svg, e.clientX, e.clientY)
-      const id = createNodeId()
-      const node: FSMNode = {
-        label: 'label',
-        innerLabel: '',
-        x: pt.x,
-        y: pt.y,
-        radius: defaultRadius,
-        transitions: [],
-      }
-      fsmState.nodes[id] = node
-      nodeAbortControllers[id] = new AbortController()
-      createNewNode(ctx, id, node)
-      tryOnChange(fsmState)
+      addNodeAt(pt)
       fsmContainer.dataset.editMode = 'default'
-      focusInnerNodeInput(ctx, id)
     })
   }
 }

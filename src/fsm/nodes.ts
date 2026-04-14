@@ -46,10 +46,7 @@ export function moveNodeTo(ctx: FSMContext, id: NodeId, x: number, y: number): v
   )
   if (innerFO) {
     const ew = node.radius * 2
-    innerFO.setAttribute('x', `${x - ew / 2}`)
-    innerFO.setAttribute('y', `${y - 20}`)
-    innerFO.setAttribute('width', `${ew}`)
-    innerFO.setAttribute('height', `40`)
+    setFOBounds(innerFO, x - ew / 2, y - 20, ew, 40)
   }
   const outerFO = ctx.svg.querySelector<SVGForeignObjectElement>(
     `foreignObject.fsm-node-label-editor[data-node-id="${id}"]`,
@@ -78,6 +75,21 @@ export function focusInnerNodeInput(ctx: FSMContext, id: NodeId): void {
   input.addEventListener('blur', () => {
     input.style.pointerEvents = 'none'
   }, { once: true })
+}
+
+/** Toggle whether `id` is the start state, emitting `start:changed` and re-validating. */
+export function toggleStartState(ctx: FSMContext, id: NodeId): void {
+  if (ctx.fsmState.start === id) {
+    delete ctx.fsmState.start
+    ctx.emitter.emit('start:changed', { start: undefined })
+  }
+  else {
+    ctx.fsmState.start = id
+    ctx.emitter.emit('start:changed', { start: id })
+  }
+  ctx.tryOnChange(ctx.fsmState)
+  if (ctx.validationEnabled)
+    runValidation(ctx, !ctx.autoValidate)
 }
 
 /** Return the id of the node whose bounding circle contains `pt`, or `undefined` if none. */
@@ -492,17 +504,7 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
         return
       if (moved)
         return
-      if (ctx.fsmState.start === id) {
-        delete ctx.fsmState.start
-        ctx.emitter.emit('start:changed', { start: undefined })
-      }
-      else {
-        ctx.fsmState.start = id
-        ctx.emitter.emit('start:changed', { start: id })
-      }
-      ctx.tryOnChange(ctx.fsmState)
-      if (ctx.validationEnabled)
-        runValidation(ctx, !ctx.autoValidate)
+      toggleStartState(ctx, id)
     })
 
     g.addEventListener('click', (e) => {

@@ -17,6 +17,19 @@ const isSafari = computed(() => {
 })
 
 const { copy } = useClipboard()
+
+function showToast(text: string) {
+  Toastify({
+    text,
+    duration: 3000,
+    gravity: 'top',
+    position: 'right',
+    style: {
+      background: 'linear-gradient(to right, #00b09b, #96c93d)',
+    },
+  }).showToast()
+}
+
 async function share() {
   const params = new URLSearchParams()
   if (fsmState.value) {
@@ -27,15 +40,7 @@ async function share() {
   const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`
   history.replaceState(null, '', url)
   await copy(url)
-  Toastify({
-    text: 'Link copied to clipboard',
-    duration: 3000,
-    gravity: 'top',
-    position: 'right',
-    style: {
-      background: 'linear-gradient(to right, #00b09b, #96c93d)',
-    },
-  }).showToast()
+  showToast('Link copied to clipboard')
 }
 
 const validationContainer = ref<string | undefined>(undefined)
@@ -57,15 +62,7 @@ const textareaContent = computed(() => {
 
 function copyTextarea() {
   copy(textareaContent.value)
-  Toastify({
-    text: 'Copied to clipboard',
-    duration: 3000,
-    gravity: 'top',
-    position: 'right',
-    style: {
-      background: 'linear-gradient(to right, #00b09b, #96c93d)',
-    },
-  }).showToast()
+  showToast('Copied to clipboard')
 }
 
 function textareaOnInput(event: Event) {
@@ -89,10 +86,19 @@ function textareaOnInput(event: Event) {
   </div>
   <TheHeader @share="share" />
   <main class="flex flex-1 flex-row gap-2 max-h-[calc(100vh-4rem)]">
-    <FsmBuilder :key="`${validationContainer}${updateKey}`" v-model="fsmState" :validation-container :variables />
+    <FsmBuilder :key="`${validationContainer}${updateKey}${variables}`" v-model="fsmState" :validation-container :variables />
     <div class="px-2 flex flex-1 flex-col gap-2 h-full overflow-scroll">
       <div class="flex-1 h-full w-full relative">
-        <div class="flex gap-3 right-2 top-2 absolute z-10">
+        <div class="flex gap-3 items-center right-2 top-2 absolute z-10">
+          <label class="text-sm text-gray-700 flex gap-1.5 items-center">
+            <span>Variables</span>
+            <input
+              v-model="variables"
+              type="text"
+              spellcheck="false"
+              class="text-sm font-mono px-1.5 py-0.5 outline-none border border-gray-300 rounded w-24 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
+            >
+          </label>
           <label class="text-sm text-gray-700 flex gap-1.5 cursor-pointer transition-colors items-center hover:text-gray-900">
             <input v-model="logicOnly" type="checkbox" class="text-blue-600 border-gray-300 rounded">
             <span>Logic Only</span>

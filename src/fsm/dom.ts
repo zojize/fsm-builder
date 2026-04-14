@@ -27,16 +27,16 @@ export function clientToSvg(svg: SVGSVGElement, clientX: number, clientY: number
   }
 }
 
-// eslint-disable-next-line vars-on-top, no-var
-var _measureCanvas: HTMLCanvasElement | undefined
+let _measureCtx: CanvasRenderingContext2D | undefined
 
 /** Measure pixel width of `text` rendered in `font` using an off-screen canvas. */
 export function getTextWidth(text: string, font: string): number {
-  _measureCanvas ??= document.createElement('canvas')
-  const ctx = _measureCanvas.getContext('2d')!
-  ctx.font = font
-  return ctx.measureText(text).width
+  _measureCtx ??= document.createElement('canvas').getContext('2d')!
+  _measureCtx.font = font
+  return _measureCtx.measureText(text).width
 }
+
+const _sortedKeyCache = new WeakMap<Record<number, string>, number[]>()
 
 /**
  * Resolve the CSS font-size string for `textLength` characters using a breakpoint map.
@@ -57,7 +57,11 @@ export function getFontSize(
     return breakpoints
   if (breakpoints == null)
     return defaultSize
-  const lengths = Object.keys(breakpoints).map(Number).sort((a, b) => a - b)
+  let lengths = _sortedKeyCache.get(breakpoints)
+  if (!lengths) {
+    lengths = Object.keys(breakpoints).map(Number).sort((a, b) => a - b)
+    _sortedKeyCache.set(breakpoints, lengths)
+  }
   if (lengths.length === 0)
     return defaultSize
   for (const len of lengths) {

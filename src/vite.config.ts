@@ -1,4 +1,5 @@
 import path from 'node:path'
+import transformerVariantGroup from '@unocss/transformer-variant-group'
 import { presetIcons, presetWind4 } from 'unocss'
 import UnoCSS from 'unocss/vite'
 import { defineConfig } from 'vite'
@@ -24,13 +25,14 @@ export default defineConfig({
         },
       },
       presets: [
-        presetWind4({ preflights: { reset: false } }),
+        presetWind4({ preflights: { reset: false }, prefix: 'uno-' }),
         presetIcons({
           collections: {
             bi: () => import('@iconify-json/bi/icons.json').then(i => i.default),
           },
         }),
       ],
+      transformers: [transformerVariantGroup()],
     }),
   ],
 })
