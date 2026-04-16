@@ -2,7 +2,9 @@
   "packages": {
     "src": {
       "release-type": "node",
-      "component": "fsm-builder"
+      "component": "fsm-builder",
+      "changelog-path": "CHANGELOG.md"
     }
-  }
+  },
+  "exclude-packages-from-root": true
 }

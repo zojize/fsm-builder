@@ -30,6 +30,5 @@
   },
   "lint-staged": {
     "*": "eslint --fix"
-  },
-  "version": "0.3.0"
+  }
 }
