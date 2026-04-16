@@ -4,15 +4,15 @@
 }
 
 Expression
-  = Add
+  = _ e:Add _ { return e }
 
 Add
-  = head:Mult tail:("+" right:Mult { return right })* {
+  = head:Mult tail:(_ "+" _ right:Mult { return right })* {
       return tail.reduce((left, right) => ({ type: "add", left, right }), head)
     }
 
 Mult
-  = head:Not tail:(("*"/"") right:Not { return right })* {
+  = head:Not tail:(_ ("*"/"") _ right:Not { return right })* {
       return tail.reduce((left, right) => ({ type: "mul", left, right }), head)
     }
 
@@ -28,7 +28,10 @@ Primary
   / Paren
 
 Paren "parenthesized expression"
-  = "(" e:Expression ")" { return e }
+  = "(" _ e:Expression _ ")" { return e }
+
+_ "optional whitespace"
+  = [ \t]*
 
 Var "variable"
   = symbol:[a-zA-Z] {

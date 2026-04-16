@@ -24,6 +24,15 @@ describe('validateBooleanExpression', () => {
     expect(validateBooleanExpression('+')).toBeTypeOf('string')
     expect(validateBooleanExpression('(a')).toBeTypeOf('string')
   })
+
+  it('accepts expressions with whitespace', () => {
+    expect(validateBooleanExpression('a + b', { alphabet: 'ab' })).toBe(true)
+    expect(validateBooleanExpression('a +b', { alphabet: 'ab' })).toBe(true)
+    expect(validateBooleanExpression('a+ b', { alphabet: 'ab' })).toBe(true)
+    expect(validateBooleanExpression(' a + b ', { alphabet: 'ab' })).toBe(true)
+    expect(validateBooleanExpression('( a + b )', { alphabet: 'ab' })).toBe(true)
+    expect(validateBooleanExpression('a * b', { alphabet: 'ab' })).toBe(true)
+  })
 })
 
 describe('evaluateBooleanExpression', () => {
@@ -67,6 +76,16 @@ describe('evaluateBooleanExpression', () => {
     expect(evaluate('a\'b+ab\'', { a: true, b: false })).toBe(true)
     expect(evaluate('a\'b+ab\'', { a: false, b: true })).toBe(true)
     expect(evaluate('a\'b+ab\'', { a: true, b: true })).toBe(false)
+  })
+
+  it('handles whitespace around operators', () => {
+    // All whitespace variants should produce the same result as no-whitespace
+    expect(evaluate('a\'b + ab\'', { a: true, b: false })).toBe(true)
+    expect(evaluate('a\'b +ab\'', { a: true, b: false })).toBe(true)
+    expect(evaluate('a\'b+ ab\'', { a: true, b: false })).toBe(true)
+    expect(evaluate(' a\'b + ab\' ', { a: true, b: false })).toBe(true)
+    expect(evaluate('( a + b )', { a: true, b: false })).toBe(true)
+    expect(evaluate('( a + b )\'', { a: true, b: true })).toBe(false)
   })
 
   it('respects operator precedence (NOT > AND > OR)', () => {

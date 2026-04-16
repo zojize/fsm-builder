@@ -48,6 +48,7 @@ The container element can be any block-level element with a defined height. `cre
 | `sidebar`             | `boolean`                   | `true`          | Shows the toolbar.                                                                     |
 | `autoValidate`        | `boolean`                   | `false`         | Run validation automatically after every change.                                       |
 | `validate`            | `false \| ValidateConfig`   | `false`         | Inline validation for edge and node labels. See [Validation](#validation).             |
+| `simulation`          | `boolean \| { variables? }` | `false`         | Enable built-in step-through simulation. See [Simulation](#simulation).                |
 | `scale`               | `number`                    | `1`             | SVG viewBox zoom factor. Values < 1 show more canvas area.                             |
 | `defaultRadius`       | `number`                    | `30`            | Default node circle radius in SVG units.                                               |
 | `fontFamily`          | `string`                    | monospace stack | Font used for all labels.                                                              |
@@ -137,6 +138,19 @@ createFSMBuilder({
 
 The `validate` callback receives the label string, the current `FSMState`, and the node or transition being edited. It should return `true` for valid, `false` for invalid, or a string error message.
 
+## Simulation
+
+Pass `simulation: true` to enable a floating panel that lets you step through input symbols against the current FSM. Variables are auto-detected from edge labels; override with an explicit alphabet:
+
+```ts
+createFSMBuilder({
+  container: '#editor',
+  simulation: { variables: 'ab' },
+})
+```
+
+When enabled, the toolbar gains **Step** and **Replay** buttons. Clicking **Step** opens a floating panel with an input box per variable; each accepts a `0`/`1` sequence, and successive Steps advance the active state using the leftmost bit of each input (consuming it). **Replay** resets to the start state. Empty inputs highlight in red; transition errors (no match, nondeterminism, missing start state) surface as a transient message below the panel.
+
 ## Boolean expression utilities
 
 ```ts
@@ -168,6 +182,16 @@ Evaluates a parsed AST against a variable assignment.
 
 ```ts
 evaluateBooleanExpression(expr, { a: true, b: false }) // true
+```
+
+### `logicOnlyFsm(state)`
+
+Strips layout data (`x`, `y`, `radius`, `offset`, `rotation`) from an `FSMState`, keeping only `start`, node labels, and transitions. Useful for comparing or exporting the logical structure of a diagram.
+
+```ts
+import { logicOnlyFsm } from '@zojize/fsm-builder'
+
+const logic = logicOnlyFsm(api.getState())
 ```
 
 **Boolean expression syntax:**
@@ -279,6 +303,7 @@ onMounted(() => {
 | `nodes.ts`      | Node creation, drag interaction, label editors, selection, start marker                                                   |
 | `edges.ts`      | Edge geometry, drag-to-curve, label editor, SVG masks for node occlusion                                                  |
 | `sidebar.ts`    | Toolbar: mode and action buttons                                                                                          |
+| `simulation.ts` | Step-through simulation panel, variable inputs, transition evaluation                                                     |
 | `validation.ts` | Reads all label inputs, runs `validateConfig`, updates the error panel                                                    |
 
 ## License
