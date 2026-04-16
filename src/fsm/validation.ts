@@ -25,7 +25,8 @@ export function runValidation(ctx: FSMContext, removeOnly = false): void {
       previousErrors.add(span.textContent ?? '')
   }
 
-  const errors: string[] = []
+  const hoverMode = typeof ctx.validateConfig === 'object' && !!ctx.validateConfig.highlightOnHover
+  const errors: { msg: string, targetSelector: string | null }[] = []
   const fos = ctx.overlay.querySelectorAll<SVGForeignObjectElement>(
     '.fsm-node-label-editor, .fsm-edge-label-editor, .fsm-node-inner-editor',
   )
@@ -35,16 +36,17 @@ export function runValidation(ctx: FSMContext, removeOnly = false): void {
     if (!input)
       return
 
+    const wasInvalid = fo.classList.contains('invalid')
+    fo.classList.remove('invalid')
+    input.classList.remove('invalid')
+
     const kind = input.dataset.validateType as ValidateKind | undefined
     const validateConfig = ctx.validateConfig
     const opts = kind ? (validateConfig as any)?.[kind] as ValidateOptions | undefined : undefined
     const validator = opts?.validate
 
-    if (!validator) {
-      fo.classList.remove('invalid')
-      input.classList.remove('invalid')
+    if (!validator)
       return
-    }
 
     let res: boolean | string | void
     try {
@@ -58,31 +60,45 @@ export function runValidation(ctx: FSMContext, removeOnly = false): void {
       res = false
     }
 
+    const buildSelector = (): string => {
+      const cls = fo.getAttribute('class') ?? ''
+      if (cls.includes('fsm-edge-label-editor'))
+        return `.fsm-edge-label-editor[data-edge-id="${fo.dataset.edgeId}"]`
+      if (cls.includes('fsm-node-inner-editor'))
+        return `.fsm-node-inner-editor[data-node-id="${fo.dataset.nodeId}"]`
+      return `.fsm-node-label-editor[data-node-id="${fo.dataset.nodeId}"]`
+    }
+
     if (typeof res === 'string') {
       if (removeOnly && !previousErrors.has(res)) {
-        // New error — keep existing visual state, skip adding
-        if (fo.classList.contains('invalid'))
-          errors.push(res)
+        if (!hoverMode && wasInvalid) {
+          fo.classList.add('invalid')
+          input.classList.add('invalid')
+          errors.push({ msg: res, targetSelector: buildSelector() })
+        }
         return
       }
-      fo.classList.add('invalid')
-      input.classList.add('invalid')
-      errors.push(res)
+      if (!hoverMode) {
+        fo.classList.add('invalid')
+        input.classList.add('invalid')
+      }
+      errors.push({ msg: res, targetSelector: buildSelector() })
     }
     else if (res === false) {
       const msg = `${input.value} is invalid`
       if (removeOnly && !previousErrors.has(msg)) {
-        if (fo.classList.contains('invalid'))
-          errors.push(msg)
+        if (!hoverMode && wasInvalid) {
+          fo.classList.add('invalid')
+          input.classList.add('invalid')
+          errors.push({ msg, targetSelector: buildSelector() })
+        }
         return
       }
-      fo.classList.add('invalid')
-      input.classList.add('invalid')
-      errors.push(msg)
-    }
-    else {
-      fo.classList.remove('invalid')
-      input.classList.remove('invalid')
+      if (!hoverMode) {
+        fo.classList.add('invalid')
+        input.classList.add('invalid')
+      }
+      errors.push({ msg, targetSelector: buildSelector() })
     }
   })
 
@@ -90,7 +106,7 @@ export function runValidation(ctx: FSMContext, removeOnly = false): void {
   const startMsg = 'No start state is set.'
   if (!ctx.fsmState.start || !(ctx.fsmState.start in ctx.fsmState.nodes)) {
     if (!removeOnly || previousErrors.has(startMsg))
-      errors.push(startMsg)
+      errors.push({ msg: startMsg, targetSelector: null })
   }
 
   ctx.validationEl.innerHTML = ''
@@ -112,12 +128,32 @@ export function runValidation(ctx: FSMContext, removeOnly = false): void {
     ul.appendChild(frag)
   }
   else {
-    for (const msg of errors) {
+    for (const { msg, targetSelector } of errors) {
       const frag = cloneTemplate(ctx.templates, 'fsm-validation-item')
       const li = frag.querySelector('li')!
       li.classList.add('error')
       li.querySelector('span:first-child')!.className = 'i-bi-x-lg'
       li.querySelector('.msg')!.textContent = msg
+
+      if (hoverMode && targetSelector) {
+        li.dataset.target = targetSelector
+        li.classList.add('uno-cursor-pointer')
+        li.addEventListener('mouseenter', () => {
+          const fo = ctx.overlay.querySelector<SVGForeignObjectElement>(targetSelector)
+          if (!fo)
+            return
+          fo.classList.add('invalid')
+          fo.querySelector<HTMLInputElement>('input.fsm-input')?.classList.add('invalid')
+        })
+        li.addEventListener('mouseleave', () => {
+          const fo = ctx.overlay.querySelector<SVGForeignObjectElement>(targetSelector)
+          if (!fo)
+            return
+          fo.classList.remove('invalid')
+          fo.querySelector<HTMLInputElement>('input.fsm-input')?.classList.remove('invalid')
+        })
+      }
+
       ul.appendChild(frag)
     }
   }

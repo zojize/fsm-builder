@@ -31,6 +31,8 @@ export interface FSMOptions {
     innerNode?: ValidateOptions
     outerNode?: ValidateOptions
     container?: string
+    /** When true, invalid inputs are only highlighted on hover over the error message. Default: false (always highlighted). */
+    highlightOnHover?: boolean
   }
   /** When true, validation runs automatically on every change. Default: false. */
   autoValidate?: boolean
