@@ -1,0 +1,8 @@
+{
+  "packages": {
+    "src": {
+      "release-type": "node",
+      "component": "fsm-builder"
+    }
+  }
+}
