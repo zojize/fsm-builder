@@ -36,6 +36,8 @@ export interface FSMOptions {
   }
   /** When true, validation runs automatically on every change. Default: false. */
   autoValidate?: boolean
+  /** Snap distance in SVG units for node alignment during drag. Nodes snap to the x/y of nearby nodes within this threshold. `0` disables snapping. Default: `8`. */
+  snapDistance?: number
   /** Enable built-in FSM simulation. Pass `true` for auto-detected variables or an options object. */
   simulation?: boolean | {
     /** Variable alphabet, e.g. `"ab"`. If omitted, auto-detected from edge labels. */

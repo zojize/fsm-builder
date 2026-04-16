@@ -34,6 +34,7 @@ const defaultFSMOptions = {
   debug: false,
   scale: 1,
   simulation: false,
+  snapDistance: 8,
 } satisfies FSMOptions
 
 /**
@@ -58,6 +59,7 @@ export function createFSMBuilder({
   fontSizeBreakpoints = defaultFSMOptions.fontSizeBreakpoints,
   scale = defaultFSMOptions.scale,
   simulation = defaultFSMOptions.simulation,
+  snapDistance = defaultFSMOptions.snapDistance,
   maxHistory,
   onChange,
 }: FSMOptions = defaultFSMOptions): FSMBuilderAPI {
@@ -134,6 +136,7 @@ export function createFSMBuilder({
       fontSizeBreakpoints,
       scale,
       simulation,
+      snapDistance,
       maxHistory,
       onChange,
     },

@@ -426,14 +426,35 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
       if (!dragging)
         return
       const pt = clientToSvg(ctx.svg, e.clientX, e.clientY)
-      const nx = pt.x - offX
-      const ny = pt.y - offY
+      let nx = pt.x - offX
+      let ny = pt.y - offY
       if (!moved) {
         const dx = nx - dragStartX
         const dy = ny - dragStartY
         if (Math.hypot(dx, dy) > 1.8)
           moved = true
       }
+      // Snap to other nodes' center coordinates
+      const snap = ctx.options.snapDistance
+      if (snap > 0) {
+        let snappedX = false
+        let snappedY = false
+        for (const [otherId, other] of Object.entries(ctx.fsmState.nodes)) {
+          if (otherId === id || ctx.selectedNodeIds.has(otherId))
+            continue
+          if (!snappedX && Math.abs(nx - other.x) <= snap) {
+            nx = other.x
+            snappedX = true
+          }
+          if (!snappedY && Math.abs(ny - other.y) <= snap) {
+            ny = other.y
+            snappedY = true
+          }
+          if (snappedX && snappedY)
+            break
+        }
+      }
+
       // Compute delta before moving primary node
       const dx = nx - node.x
       const dy = ny - node.y
