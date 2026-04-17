@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/zojize/fsm-builder/compare/v0.3.3...v0.3.4) (2026-04-17)
+
+
+### Bug Fixes
+
+* sync version from root to src/package.json in publish workflow ([f9757ce](https://github.com/zojize/fsm-builder/commit/f9757ce9c2a2953607aa039a41741ed08d9e8134))
+
 ## [0.3.3](https://github.com/zojize/fsm-builder/compare/v0.3.2...v0.3.3) (2026-04-17)
 
 
