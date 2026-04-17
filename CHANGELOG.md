@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5](https://github.com/zojize/fsm-builder/compare/v0.3.4...v0.3.5) (2026-04-17)
+
+
+### Bug Fixes
+
+* exclude sourcemap from build and copy README at publish time ([11546ee](https://github.com/zojize/fsm-builder/commit/11546ee2d47d9b159403ec731903d012c6d48f8e))
+
 ## [0.3.4](https://github.com/zojize/fsm-builder/compare/v0.3.3...v0.3.4) (2026-04-17)
 
 
