@@ -13,7 +13,7 @@ export default defineConfig({
       fileName: 'fsm-builder',
       formats: ['es'],
     },
-    sourcemap: true,
+    sourcemap: false,
     minify: false,
   },
   plugins: [

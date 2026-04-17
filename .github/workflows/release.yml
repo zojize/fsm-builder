@@ -37,6 +37,9 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      - name: Copy README into src/ for npm
+        run: cp README.md src/README.md
+
       - name: Sync version to src/package.json
         run: node -e "
           const root = require('./package.json');
