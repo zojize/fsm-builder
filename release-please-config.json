@@ -1,10 +1,11 @@
 {
   "packages": {
-    "src": {
+    ".": {
       "release-type": "node",
       "component": "fsm-builder",
-      "changelog-path": "CHANGELOG.md"
+      "extra-files": [
+        "src/package.json"
+      ]
     }
-  },
-  "exclude-packages-from-root": true
+  }
 }

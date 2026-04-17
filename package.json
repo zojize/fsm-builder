@@ -1,6 +1,7 @@
 {
   "name": "fsm-builder-monorepo",
   "type": "module",
+  "version": "0.3.1",
   "private": true,
   "workspaces": [
     "src",
@@ -30,6 +31,5 @@
   },
   "lint-staged": {
     "*": "eslint --fix"
-  },
-  "version": "0.3.1"
+  }
 }
