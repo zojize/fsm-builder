@@ -2,14 +2,7 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "component": "fsm-builder",
-      "extra-files": [
-        {
-          "type": "json",
-          "path": "src/package.json",
-          "jsonpath": "$.version"
-        }
-      ]
+      "component": "fsm-builder"
     }
   }
 }
