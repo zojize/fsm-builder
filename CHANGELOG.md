@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/zojize/fsm-builder/compare/v0.3.2...v0.3.3) (2026-04-17)
+
+
+### Bug Fixes
+
+* use jsonpath in extra-files to sync src/package.json version ([0eab726](https://github.com/zojize/fsm-builder/commit/0eab726de7cc8188872e88a0afc38a3020bef478))
+
 ## [0.3.2](https://github.com/zojize/fsm-builder/compare/v0.3.1...v0.3.2) (2026-04-17)
 
 
