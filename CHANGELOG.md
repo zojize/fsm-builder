@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.7](https://github.com/zojize/fsm-builder/compare/v0.3.6...v0.3.7) (2026-08-31)
+
+
+### Bug Fixes
+
+* prevent all editor focus from scrolling ([b6642d7](https://github.com/zojize/fsm-builder/commit/b6642d7deba18d0198dd0ec8e0ec00d8b5620939))
+
 ## [0.3.6](https://github.com/zojize/fsm-builder/compare/v0.3.5...v0.3.6) (2026-08-31)
 
 
