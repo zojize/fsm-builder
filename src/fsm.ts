@@ -433,7 +433,7 @@ export function createFSMBuilder({
             ctx.history?.redo()
           }
           // Keep focus on container for consecutive undo/redo presses
-          fsmContainer.focus()
+          fsmContainer.focus({ preventScroll: true })
         }
       })
     }

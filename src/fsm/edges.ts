@@ -363,7 +363,7 @@ export function createNewEdge(ctx: FSMContext, source: NodeId, transition: FSMTr
       }
       dragBase = null
       if (!moved)
-        edgeInput.focus()
+        edgeInput.focus({ preventScroll: true })
       else
         ctx.emitter.emit('edge:move-end', { id })
     }
@@ -427,7 +427,7 @@ export function createNewEdge(ctx: FSMContext, source: NodeId, transition: FSMTr
         moved = false
         return
       }
-      edgeInput.focus()
+      edgeInput.focus({ preventScroll: true })
     }
     path.addEventListener('click', onClick)
     arrow.addEventListener('click', onClick)

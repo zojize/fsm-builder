@@ -70,7 +70,7 @@ export function focusInnerNodeInput(ctx: FSMContext, id: NodeId): void {
   if (!input)
     return
   input.style.pointerEvents = 'auto'
-  input.focus()
+  input.focus({ preventScroll: true })
   input.select()
   input.addEventListener('blur', () => {
     input.style.pointerEvents = 'none'
@@ -265,7 +265,7 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
       }
       else {
         const input = cloneTemplate(ctx.templates, 'fsm-input').querySelector('input')! as HTMLInputElement
-        outerFO.addEventListener('click', () => input.focus())
+        outerFO.addEventListener('click', () => input.focus({ preventScroll: true }))
         input.dataset.validateType = 'outerNode'
         if (ctx.validationEnabled) {
           const validateConfig = ctx.validateConfig
@@ -337,7 +337,7 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
     )
     if (edgeInput) {
       edgeInput.style.pointerEvents = 'auto'
-      requestAnimationFrame(() => edgeInput.focus())
+      requestAnimationFrame(() => edgeInput.focus({ preventScroll: true }))
     }
   }
 
@@ -554,7 +554,7 @@ export function createNewNode(ctx: FSMContext, id: NodeId, node: FSMNode): SVGGE
       const innerFO = ctx.svg.querySelector<SVGForeignObjectElement>(`foreignObject.fsm-node-inner-editor[data-node-id="${id}"]`)
       if (innerFO) {
         const input = innerFO.querySelector('input') as HTMLInputElement | null
-        input?.focus()
+        input?.focus({ preventScroll: true })
       }
     })
 
