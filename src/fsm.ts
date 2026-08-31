@@ -339,7 +339,7 @@ export function createFSMBuilder({
     fsmContainer.setAttribute('tabindex', '-1')
     fsmContainer.style.outline = 'none'
 
-    svg.addEventListener('pointerdown', () => fsmContainer.focus())
+    svg.addEventListener('pointerdown', () => fsmContainer.focus({ preventScroll: true }))
 
     // Background click: clear selection, or drag to box-select nodes (live)
     svg.addEventListener('pointerdown', (e: PointerEvent) => {
