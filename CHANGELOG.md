@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.6](https://github.com/zojize/fsm-builder/compare/v0.3.5...v0.3.6) (2026-08-31)
+
+
+### Bug Fixes
+
+* prevent canvas focus from scrolling the page ([a14cd59](https://github.com/zojize/fsm-builder/commit/a14cd593f08a2dea6109744f31082a99fe420167))
+
 ## [0.3.5](https://github.com/zojize/fsm-builder/compare/v0.3.4...v0.3.5) (2026-04-17)
 
 
