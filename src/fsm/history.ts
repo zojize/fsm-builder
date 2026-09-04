@@ -5,6 +5,7 @@ import type { FSMState } from './types'
 export interface FSMHistory {
   undo: () => void
   redo: () => void
+  capture: () => void
   destroy: () => void
 }
 
@@ -86,5 +87,5 @@ export function createHistory(
 
   ctx.destroyCallbacks.push(destroy)
 
-  return { undo, redo, destroy }
+  return { undo, redo, capture, destroy }
 }

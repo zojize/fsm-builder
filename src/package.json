@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@iconify-json/bi": "^1.2.7",
+    "@iconify-json/mdi": "^1.2.3",
     "@types/node": "^22.19.15",
     "@unocss/transformer-variant-group": "^66.5.2",
     "bumpp": "^11.0.1",

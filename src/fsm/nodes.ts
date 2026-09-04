@@ -61,6 +61,39 @@ export function moveNodeTo(ctx: FSMContext, id: NodeId, x: number, y: number): v
   ctx.emitter.emit('node:moved', { id, node })
 }
 
+/** Resize a node and refresh every piece of geometry derived from its radius. */
+export function resizeNodeTo(ctx: FSMContext, id: NodeId, radius: number): void {
+  const node = ctx.getNode(id)
+  if (!node || !Number.isFinite(radius) || radius <= 0)
+    return
+
+  node.radius = radius
+  const circle = ctx.nodesGroup.querySelector<SVGCircleElement>(
+    `g.fsm-node[data-node-id="${id}"] circle.fsm-node-circle`,
+  )
+  circle?.setAttribute('r', `${radius}`)
+
+  const innerFO = ctx.overlay.querySelector<SVGForeignObjectElement>(
+    `foreignObject.fsm-node-inner-editor[data-node-id="${id}"]`,
+  )
+  if (innerFO)
+    setFOBounds(innerFO, node.x - radius, node.y - 20, radius * 2, 40)
+
+  const outerFO = ctx.overlay.querySelector<SVGForeignObjectElement>(
+    `foreignObject.fsm-node-label-editor[data-node-id="${id}"]`,
+  )
+  if (outerFO) {
+    const width = outerFO.width.baseVal.value
+    const yAnchor = node.y + radius + 12 + 5
+    outerFO.setAttribute('x', `${node.x - width / 2}`)
+    outerFO.setAttribute('y', `${yAnchor - 20}`)
+  }
+
+  // Edges and masks already subscribe to this internal geometry event.
+  ctx.emitter.emit(`fsm:${id}-update-pos`, node)
+  ctx.emitter.emit('node:changed', { id, node })
+}
+
 /** Focus the inner-label `<input>` for `id`, enabling pointer events until it blurs. */
 export function focusInnerNodeInput(ctx: FSMContext, id: NodeId): void {
   const innerFO = ctx.overlay.querySelector<SVGForeignObjectElement>(
@@ -596,6 +629,11 @@ export function createStartMarker(ctx: FSMContext): void {
   })
 
   ctx.emitter.on('node:moved', ({ id, node }) => {
+    if (id === ctx.fsmState.start)
+      updateStartMarker(node)
+  })
+
+  ctx.emitter.on('node:changed', ({ id, node }) => {
     if (id === ctx.fsmState.start)
       updateStartMarker(node)
   })

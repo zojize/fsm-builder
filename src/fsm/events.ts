@@ -12,7 +12,7 @@ export interface FSMEventMap {
   'node:removed': { id: NodeId }
   /** A node is being dragged (fires frequently). */
   'node:moved': { id: NodeId, node: FSMNode }
-  /** A node's `label` or `innerLabel` changed. */
+  /** A node's editable data changed. */
   'node:changed': { id: NodeId, node: FSMNode }
 
   // Node semantic completion (for undo/redo)

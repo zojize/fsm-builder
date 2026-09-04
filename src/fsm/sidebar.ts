@@ -4,6 +4,25 @@ import { createIconElement } from './icons'
 import { toggleStartState } from './nodes'
 import { runValidation } from './validation'
 
+interface ViewControls {
+  getZoom: () => number
+  setZoom: (zoom: number, anchor?: { clientX: number, clientY: number }) => number
+  getNodeScale: () => number
+  setNodeScale: (scale: number) => number
+  commitNodeScale: () => void
+}
+
+const ZOOM_MIN = 0.5
+const ZOOM_MAX = 2
+
+function clampZoom(zoom: number): number {
+  return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom))
+}
+
+function scalePercent(scale: number): string {
+  return `${Math.round(scale * 100)}%`
+}
+
 function makeBtn(
   title: string,
   iconName: string,
@@ -33,11 +52,95 @@ function makeActionBtn(title: string, iconName: string, extraClass = ''): HTMLBu
   return btn
 }
 
+function addViewControls(
+  sidebar: HTMLDivElement,
+  list: HTMLDivElement,
+  ctx: FSMContext,
+  controls: ViewControls,
+): void {
+  const sizeBtn = makeActionBtn('Adjust node size (Alt/Option + scroll zooms canvas)', 'i-mdi-circle-expand')
+  sizeBtn.dataset.action = 'node-size'
+  sizeBtn.setAttribute('aria-expanded', 'false')
+  list.appendChild(sizeBtn)
+
+  const popover = document.createElement('div')
+  popover.className = 'fsm-node-size-popover'
+  popover.hidden = true
+
+  const controlsRow = document.createElement('div')
+  controlsRow.className = 'fsm-node-size-row'
+  const slider = document.createElement('input')
+  slider.type = 'range'
+  slider.min = `${ZOOM_MIN}`
+  slider.max = `${ZOOM_MAX}`
+  slider.step = '0.01'
+  slider.setAttribute('aria-label', 'Node size')
+  const value = document.createElement('output')
+  value.className = 'fsm-node-size-value'
+  value.setAttribute('aria-live', 'polite')
+  controlsRow.append(slider, value)
+  popover.appendChild(controlsRow)
+  sidebar.appendChild(popover)
+
+  const sync = () => {
+    const nodeScale = controls.getNodeScale()
+    slider.value = `${nodeScale}`
+    value.textContent = scalePercent(nodeScale)
+  }
+  const changeNodeScale = (nodeScale: number) => {
+    controls.setNodeScale(clampZoom(nodeScale))
+    sync()
+  }
+
+  sizeBtn.addEventListener('click', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    popover.hidden = !popover.hidden
+    sizeBtn.setAttribute('aria-expanded', `${!popover.hidden}`)
+    sync()
+  })
+  slider.addEventListener('input', () => changeNodeScale(Number(slider.value)))
+  slider.addEventListener('change', controls.commitNodeScale)
+
+  const onWheel = (event: WheelEvent) => {
+    if (!event.altKey)
+      return
+    event.preventDefault()
+    const factor = Math.exp(-event.deltaY * 0.0015)
+    controls.setZoom(
+      clampZoom(controls.getZoom() * factor),
+      { clientX: event.clientX, clientY: event.clientY },
+    )
+  }
+  ctx.svg.addEventListener('wheel', onWheel, { passive: false })
+
+  const closePopover = (event: PointerEvent) => {
+    const target = event.target as Node
+    if (!popover.contains(target) && !sizeBtn.contains(target)) {
+      popover.hidden = true
+      sizeBtn.setAttribute('aria-expanded', 'false')
+    }
+  }
+  document.addEventListener('pointerdown', closePopover)
+  const unsubscribeChange = ctx.emitter.on('change', sync)
+  ctx.destroyCallbacks.push(() => {
+    document.removeEventListener('pointerdown', closePopover)
+    ctx.svg.removeEventListener('wheel', onWheel)
+    unsubscribeChange()
+  })
+  sync()
+}
+
 /**
  * Create and append the editing sidebar to `container`.
  * Requires access to the full FSM context so it can trigger clear-all and copy JSON.
  */
-export function createSidebar(container: HTMLElement, ctx: FSMContext, removeNode: (id: string) => void): void {
+export function createSidebar(
+  container: HTMLElement,
+  ctx: FSMContext,
+  removeNode: (id: string) => void,
+  viewControls: ViewControls,
+): void {
   if (container.querySelector(':scope > .fsm-sidebar'))
     return
 
@@ -64,6 +167,8 @@ export function createSidebar(container: HTMLElement, ctx: FSMContext, removeNod
   for (const [label, iconName, mode] of tools) {
     list.appendChild(makeBtn(label, iconName, mode, container))
   }
+
+  addViewControls(sidebar, list, ctx, viewControls)
 
   // Set start – action button (not a mode toggle)
   const startBtn = makeActionBtn('Toggle start state', 'i-bi-caret-right-square')

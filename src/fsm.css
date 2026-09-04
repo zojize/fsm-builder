@@ -361,6 +361,45 @@ details.instructions[open] summary {
   background: #e5e7eb; /* gray-200 */
 }
 
+.fsm-builder .fsm-node-size-popover {
+  position: absolute;
+  left: 76px;
+  top: 108px;
+  width: 180px;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+  color: #374151;
+  z-index: 12;
+}
+
+.fsm-builder .fsm-node-size-popover[hidden] {
+  display: none;
+}
+
+.fsm-builder .fsm-node-size-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fsm-builder .fsm-node-size-row input[type='range'] {
+  min-width: 0;
+  flex: 1;
+  accent-color: #2563eb;
+}
+
+.fsm-builder .fsm-node-size-value {
+  min-width: 36px;
+  color: #374151;
+  font-family: var(--fsm-font-family);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+}
+
 /* Box selector (drag on empty canvas to multi-select nodes) */
 .fsm-builder .fsm-box-selector {
   fill: rgba(37, 99, 235, 0.06);

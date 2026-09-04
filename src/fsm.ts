@@ -5,7 +5,7 @@ import { clientToSvg, createSvgEl } from './fsm/dom'
 import { createEdgeMasks, createNewEdge, removeEdge } from './fsm/edges'
 import { createEventEmitter } from './fsm/events'
 import { createHistory } from './fsm/history'
-import { createNewNode, createStartMarker, findNodeAtPt, focusInnerNodeInput, removeNode } from './fsm/nodes'
+import { createNewNode, createStartMarker, findNodeAtPt, focusInnerNodeInput, removeNode, resizeNodeTo } from './fsm/nodes'
 import { clearSelection, emitSelectionChanged, syncNodeSelection } from './fsm/selection'
 import { createSidebar } from './fsm/sidebar'
 import { createSimulation } from './fsm/simulation'
@@ -80,8 +80,48 @@ export function createFSMBuilder({
   const emitter = createEventEmitter()
 
   const fsmState: FSMState = initialState
+  let currentScale = scale
+  const initialNode = Object.values(fsmState.nodes)[0]
+  let currentNodeScale = initialNode && defaultRadius > 0
+    ? initialNode.radius / defaultRadius
+    : 1
 
   const { svg, defs, overlay, edgesGroup, nodesGroup } = initializeSvg(fsmContainer)
+
+  // Viewport state is presentation-only and never enters the serialised FSM state.
+  let panX = 0
+  let panY = 0
+
+  function updateViewBox() {
+    const rect = fsmContainer.getBoundingClientRect()
+    const aspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
+    const baseHeight = 600 / currentScale
+    svg.setAttribute('viewBox', `${panX} ${panY} ${baseHeight * aspectRatio} ${baseHeight}`)
+  }
+
+  function setZoom(nextScale: number, anchor?: { clientX: number, clientY: number }): number {
+    if (!Number.isFinite(nextScale) || nextScale <= 0)
+      return currentScale
+
+    const rect = fsmContainer.getBoundingClientRect()
+    const viewBox = svg.viewBox.baseVal
+    const ratioX = anchor && rect.width > 0
+      ? Math.min(1, Math.max(0, (anchor.clientX - rect.left) / rect.width))
+      : 0.5
+    const ratioY = anchor && rect.height > 0
+      ? Math.min(1, Math.max(0, (anchor.clientY - rect.top) / rect.height))
+      : 0.5
+    const anchorX = viewBox.x + viewBox.width * ratioX
+    const anchorY = viewBox.y + viewBox.height * ratioY
+
+    currentScale = nextScale
+    const nextHeight = 600 / currentScale
+    const aspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
+    panX = anchorX - nextHeight * aspectRatio * ratioX
+    panY = anchorY - nextHeight * ratioY
+    updateViewBox()
+    return currentScale
+  }
 
   let nodeIdCounter = 0
   const createNodeId = (): NodeId => {
@@ -195,6 +235,18 @@ export function createFSMBuilder({
 
   ctx.history = !readonly ? createHistory(ctx, loadState, maxHistory) : null
 
+  function setNodeScale(nextScale: number): number {
+    if (!Number.isFinite(nextScale) || nextScale <= 0)
+      return currentNodeScale
+
+    currentNodeScale = nextScale
+    const radius = defaultRadius * currentNodeScale
+    for (const id of Object.keys(fsmState.nodes))
+      resizeNodeTo(ctx, id, radius)
+    tryOnChange(fsmState)
+    return currentNodeScale
+  }
+
   function addNodeAt(pt: { x: number, y: number }): NodeId {
     const id = createNodeId()
     const node: FSMNode = {
@@ -202,7 +254,7 @@ export function createFSMBuilder({
       innerLabel: '',
       x: pt.x,
       y: pt.y,
-      radius: defaultRadius,
+      radius: defaultRadius * currentNodeScale,
       transitions: [],
     }
     fsmState.nodes[id] = node
@@ -213,8 +265,20 @@ export function createFSMBuilder({
     return id
   }
 
-  if (!readonly && (debug || sidebar))
-    createSidebar(fsmContainer, ctx, id => removeNode(ctx, id))
+  if (!readonly && (debug || sidebar)) {
+    createSidebar(
+      fsmContainer,
+      ctx,
+      id => removeNode(ctx, id),
+      {
+        getZoom: () => currentScale,
+        setZoom,
+        getNodeScale: () => currentNodeScale,
+        setNodeScale,
+        commitNodeScale: () => ctx.history?.capture(),
+      },
+    )
+  }
 
   if (simulation) {
     ctx.simulation = createSimulation(ctx)
@@ -235,6 +299,10 @@ export function createFSMBuilder({
       ctx.fsmState.nodes[id] = node
       ctx.nodeAbortControllers[id] = new AbortController()
     }
+    const firstNode = Object.values(ctx.fsmState.nodes)[0]
+    currentNodeScale = firstNode && defaultRadius > 0
+      ? firstNode.radius / defaultRadius
+      : 1
 
     // Re-render (same order as init: edges first, then nodes)
     for (const [source, node] of Object.entries(ctx.fsmState.nodes)) {
@@ -297,7 +365,7 @@ export function createFSMBuilder({
     svg.setAttribute('height', '100%')
     const rect = container.getBoundingClientRect()
     const aspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
-    const baseHeight = 600 / scale
+    const baseHeight = 600 / currentScale
     svg.setAttribute('viewBox', `0 0 ${baseHeight * aspectRatio} ${baseHeight}`)
     for (const [key, value] of Object.entries(svgAttributes)) {
       svg.setAttribute(key, value)
@@ -469,17 +537,6 @@ export function createFSMBuilder({
         ctx.emitter.emit('edge:removed', { id: edgeIds.at(-1)! })
     })
 
-    // Viewport pan state
-    let panX = 0
-    let panY = 0
-
-    function updateViewBox() {
-      const rect = fsmContainer.getBoundingClientRect()
-      const aspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
-      const baseHeight = 600 / scale
-      svg.setAttribute('viewBox', `${panX} ${panY} ${baseHeight * aspectRatio} ${baseHeight}`)
-    }
-
     const resizeObserver = new ResizeObserver(() => updateViewBox())
     resizeObserver.observe(fsmContainer)
     ctx.destroyCallbacks.push(() => resizeObserver.disconnect())
@@ -559,7 +616,7 @@ export function createFSMBuilder({
       if (!addPreview) {
         addPreview = createSvgEl('circle')
         addPreview.classList.add('fsm-add-preview')
-        addPreview.setAttribute('r', `${defaultRadius}`)
+        addPreview.setAttribute('r', `${defaultRadius * currentNodeScale}`)
         overlay.appendChild(addPreview)
       }
       return addPreview
