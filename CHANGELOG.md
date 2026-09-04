@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/zojize/fsm-builder/compare/v0.3.7...v0.4.0) (2026-09-04)
+
+
+### Features
+
+* add canvas zoom and node size controls ([2a2ab21](https://github.com/zojize/fsm-builder/commit/2a2ab21fbc018a4d000e701d0c0506e897d4a393))
+
 ## [0.3.7](https://github.com/zojize/fsm-builder/compare/v0.3.6...v0.3.7) (2026-08-31)
 
 
