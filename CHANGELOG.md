@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/zojize/fsm-builder/compare/v0.4.0...v0.4.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* keep canvas geometry independent of viewport size ([31fedd2](https://github.com/zojize/fsm-builder/commit/31fedd2f04304dea5936fd04a91543658c344ee7))
+
 ## [0.4.0](https://github.com/zojize/fsm-builder/compare/v0.3.7...v0.4.0) (2026-09-04)
 
 
