@@ -30,6 +30,8 @@ const api = createFSMBuilder({
 
 The container element can be any block-level element with a defined height. `createFSMBuilder` automatically adds the `fsm-builder` class to it.
 
+At `scale: 1`, one SVG unit equals one CSS pixel. Increasing the canvas dimensions reveals more drawing space without enlarging states or labels. Editable and read-only diagrams both adapt when resized or revealed after being hidden. The `scale` option must be positive and finite; invalid values fall back to `1`.
+
 ```html
 <div id="my-container" style="height: 400px"></div>
 ```

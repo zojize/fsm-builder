@@ -29,6 +29,9 @@ describe('fsm builder focus behavior', () => {
   let container: HTMLDivElement | undefined
 
   beforeEach(() => {
+    // happy-dom has no layout; give the viewport its actual size before mounting.
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue(new DOMRect(0, 0, 600, 600))
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
       font: '',
       measureText: text => ({ width: text.length * 10 }) as TextMetrics,

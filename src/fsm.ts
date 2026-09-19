@@ -80,7 +80,7 @@ export function createFSMBuilder({
   const emitter = createEventEmitter()
 
   const fsmState: FSMState = initialState
-  let currentScale = scale
+  let currentScale = Number.isFinite(scale) && scale > 0 ? scale : defaultFSMOptions.scale
   const initialNode = Object.values(fsmState.nodes)[0]
   let currentNodeScale = initialNode && defaultRadius > 0
     ? initialNode.radius / defaultRadius
@@ -93,32 +93,33 @@ export function createFSMBuilder({
   let panY = 0
 
   function updateViewBox() {
-    const rect = fsmContainer.getBoundingClientRect()
-    const aspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
-    const baseHeight = 600 / currentScale
-    svg.setAttribute('viewBox', `${panX} ${panY} ${baseHeight * aspectRatio} ${baseHeight}`)
+    const rect = svg.getBoundingClientRect()
+    // Keep the last valid viewport while hidden; ResizeObserver restores it on reveal.
+    if (rect.width <= 0 || rect.height <= 0)
+      return
+    svg.setAttribute('viewBox', `${panX} ${panY} ${rect.width / currentScale} ${rect.height / currentScale}`)
   }
 
   function setZoom(nextScale: number, anchor?: { clientX: number, clientY: number }): number {
     if (!Number.isFinite(nextScale) || nextScale <= 0)
       return currentScale
 
-    const rect = fsmContainer.getBoundingClientRect()
+    const rect = svg.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0)
+      return currentScale
     const viewBox = svg.viewBox.baseVal
-    const ratioX = anchor && rect.width > 0
+    const ratioX = anchor
       ? Math.min(1, Math.max(0, (anchor.clientX - rect.left) / rect.width))
       : 0.5
-    const ratioY = anchor && rect.height > 0
+    const ratioY = anchor
       ? Math.min(1, Math.max(0, (anchor.clientY - rect.top) / rect.height))
       : 0.5
     const anchorX = viewBox.x + viewBox.width * ratioX
     const anchorY = viewBox.y + viewBox.height * ratioY
 
     currentScale = nextScale
-    const nextHeight = 600 / currentScale
-    const aspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
-    panX = anchorX - nextHeight * aspectRatio * ratioX
-    panY = anchorY - nextHeight * ratioY
+    panX = anchorX - rect.width / currentScale * ratioX
+    panY = anchorY - rect.height / currentScale * ratioY
     updateViewBox()
     return currentScale
   }
@@ -212,6 +213,11 @@ export function createFSMBuilder({
   }
 
   fsmContainer.dataset.editMode = 'default'
+
+  // Read-only diagrams need the same responsive viewport as editable builders.
+  const resizeObserver = new ResizeObserver(() => updateViewBox())
+  resizeObserver.observe(svg)
+  ctx.destroyCallbacks.push(() => resizeObserver.disconnect())
 
   if (!readonly)
     registerGlobalEvents()
@@ -363,14 +369,15 @@ export function createFSMBuilder({
     const svg = createSvgEl('svg')
     svg.setAttribute('width', '100%')
     svg.setAttribute('height', '100%')
-    const rect = container.getBoundingClientRect()
-    const aspectRatio = rect.height === 0 ? 1 : rect.width / rect.height
-    const baseHeight = 600 / currentScale
-    svg.setAttribute('viewBox', `0 0 ${baseHeight * aspectRatio} ${baseHeight}`)
+    container.appendChild(svg)
+    const rect = svg.getBoundingClientRect()
+    // A nonzero placeholder keeps hidden mounts valid until their first resize.
+    svg.setAttribute('viewBox', rect.width > 0 && rect.height > 0
+      ? `0 0 ${rect.width / currentScale} ${rect.height / currentScale}`
+      : '0 0 1 1')
     for (const [key, value] of Object.entries(svgAttributes)) {
       svg.setAttribute(key, value)
     }
-    container.appendChild(svg)
 
     let defs = svg.querySelector('defs')
     if (!defs) {
@@ -537,10 +544,6 @@ export function createFSMBuilder({
         ctx.emitter.emit('edge:removed', { id: edgeIds.at(-1)! })
     })
 
-    const resizeObserver = new ResizeObserver(() => updateViewBox())
-    resizeObserver.observe(fsmContainer)
-    ctx.destroyCallbacks.push(() => resizeObserver.disconnect())
-
     // Panning in 'move' mode or Cmd/Ctrl+Shift+drag
     svg.addEventListener('pointerdown', (e: PointerEvent) => {
       const mode = fsmContainer.dataset.editMode
@@ -552,7 +555,9 @@ export function createFSMBuilder({
       let lastY = e.clientY
       fsmContainer.classList.add('panning')
       const onMove = (ev: PointerEvent) => {
-        const rect = fsmContainer.getBoundingClientRect()
+        const rect = svg.getBoundingClientRect()
+        if (rect.width <= 0 || rect.height <= 0)
+          return
         const vb = svg.viewBox.baseVal
         const scaleX = vb.width / rect.width
         const scaleY = vb.height / rect.height
